@@ -1163,11 +1163,10 @@ function notifyIfCapped(){
 function checkOffers(){
   const nx=LEVELS[G.level].next;
   const cappedReady = !!(G.blocked && nx);        // pronto ma azienda troppo piccola
-  let chance=0, forNext=false;
-  if(cappedReady){ chance=0.55; forNext=true; }
-  else if(G.rep>=40 && G.monthsHere>=3){ chance=0.16; }   // la reputazione attira i cacciatori di teste
-  if(Math.random()<chance){ showIncomingOffer(forNext); return; }
-  notifyIfCapped();
+  // Se sei bloccato dal tetto, l'offerta per crescere appare direttamente (accetta / resta).
+  if(cappedReady){ showIncomingOffer(true); return; }
+  // Altrimenti la reputazione attira i cacciatori di teste, ogni tanto.
+  if(G.rep>=40 && G.monthsHere>=3 && Math.random()<0.16){ showIncomingOffer(false); return; }
 }
 // Candidati per un'offerta spontanea: solo ruoli per cui il giocatore è già qualificato.
 function offerCandidates(forNext){
