@@ -1,0 +1,18 @@
+{
+  "name": "HR Quest — La Scalata",
+  "short_name": "HR Quest",
+  "description": "Gioco di ruolo gestionale sulla carriera nelle Risorse Umane: da neolaureato a HR Director.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1220",
+  "theme_color": "#0e1220",
+  "lang": "it",
+  "categories": ["games", "education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
