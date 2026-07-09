@@ -1152,9 +1152,13 @@ function notifyIfCapped(){
     <p class="body"><b>${G.company.n}</b> è troppo piccola per il ruolo di <b>${nextRole}</b>: non può darti questa posizione.
        Sei pronto per il salto: cerca un'azienda più grande e candidati.</p>
     <button class="btn block" id="capSearch" style="margin-bottom:10px">${icon('offer',15)} Cerca lavoro</button>
-    <button class="btn block ghost" id="capOk">Resto ancora un po'</button>`;
+    <button class="btn block ghost" id="capOk">Resto ancora un po' (+4 ${icon('stress',13)})</button>`;
   m.querySelector("#capSearch").onclick=showJobMarket;
-  m.querySelector("#capOk").onclick=hideOverlay;
+  m.querySelector("#capOk").onclick=()=>{
+    G.stress=clamp(G.stress+4,0,100);
+    pushLog(`Resti in ${G.company.n} nonostante il tetto. <span class="bad">+4 stress</span> di frustrazione.`);
+    hideOverlay(); if(G.stress>=100){ loseGame(); return; } render();
+  };
   showOverlay();
 }
 
@@ -1200,8 +1204,14 @@ function showIncomingOffer(forNext){
     b.onclick=()=>acceptOffer(o); box.appendChild(b);
   });
   const stay=document.createElement("button"); stay.className="choice"; stay.style.borderColor="var(--line)";
-  stay.innerHTML=`<div class="ct">🪑 Resta in ${G.company.n}</div><div class="cd">Ringrazi e rifiuti l'offerta.</div>`;
-  stay.onclick=()=>{ pushLog(`Hai declinato un'offerta esterna da un headhunter.`); hideOverlay(); render(); };
+  const stayStress = forNext ? 6 : 4;
+  stay.innerHTML=`<div class="ct">🪑 Resta in ${G.company.n}</div>
+    <div class="cd">Rifiuti l'offerta. <span class="tag str" style="margin-left:2px">${icon('stress',11)} +${stayStress}</span></div>`;
+  stay.onclick=()=>{
+    G.stress=clamp(G.stress+stayStress,0,100);
+    pushLog(`Hai declinato l'offerta e sei rimasto in ${G.company.n}. <span class="bad">+${stayStress} stress</span> (${forNext?'la crescita mancata pesa':'la decisione ti agita'}).`);
+    hideOverlay(); if(G.stress>=100){ loseGame(); return; } render();
+  };
   box.appendChild(stay); showOverlay();
 }
 
@@ -1490,9 +1500,12 @@ function showLifestyle(){
         <span class="tag rep">${icon('reputazione',12)} ${rv}/trim</span>
         ${L.poor?'<span class="tag str">😖 logoramento se prolungato</span>':''}</div>`;
     b.onclick=()=>{
-      const changed=i!==G.lifestyle; G.lifestyle=i;
-      if(changed) pushLog(`🏡 Nuovo stile di vita: <b>${L.name}</b> (spese ×${L.costMul}, stress ${sv}/trim, reputazione ${rv}/trim).`);
-      hideOverlay(); render();
+      const changed=i!==G.lifestyle;
+      if(changed){
+        G.lifestyle=i; G.stress=clamp(G.stress+3,0,100);
+        pushLog(`🏡 Nuovo stile di vita: <b>${L.name}</b> (spese ×${L.costMul}, stress ${sv}/trim, reputazione ${rv}/trim). <span class="bad">+3 stress</span> per il cambiamento.`);
+      }
+      hideOverlay(); if(G.stress>=100){ loseGame(); return; } render();
     };
     box.appendChild(b);
   });
