@@ -25,6 +25,9 @@ self.addEventListener('fetch', e => {
   // Cross-origin (Supabase leaderboard, ecc.): sempre rete, mai cache.
   if (url.origin !== self.location.origin) return;
 
+  // Endpoint Vercel (analytics/insights): sempre rete, mai cache.
+  if (url.pathname.startsWith('/_vercel/')) return;
+
   // HTML dell'app: network-first (aggiornamenti quando sei online), cache offline.
   if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('/index.html')) {
     e.respondWith(
