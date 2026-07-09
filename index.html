@@ -350,7 +350,10 @@
         <label>Come ti chiami?</label>
         <input id="nameInput" type="text" placeholder="Il tuo nome" maxlength="18" autocomplete="off">
       </div>
-      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <div id="resumeWrap" style="display:none;margin-top:18px">
+        <button class="btn block" id="resumeBtn"></button>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn" id="startBtn">Inizia la carriera →</button>
         <button class="btn ghost" id="introLbBtn">🏆 Classifica</button>
       </div>
@@ -694,6 +697,7 @@ const IMPREVISTI = [
 let G = null;
 
 function newGame(name, offer){
+  clearSave();
   const c = offer.company;
   G = {
     name, avatar:"🧑‍💼", month:1,
@@ -722,6 +726,17 @@ function roleSalary(tier, level){ return Math.round((22000 + level*9000) * TIERS
 /* ================= INTRO / OFFERS ================= */
 $("introBadge").innerHTML=icon('avatar',58,'introico');
 $("introLbBtn").onclick=()=>showLeaderboard();
+$("resumeBtn").onclick=resumeGame;
+(function initResume(){
+  const s=loadSave();
+  if(s && s.month && s.company){
+    const y=Math.floor((s.month-1)/4)+1, q=(s.month-1)%4+1;
+    $("resumeBtn").innerHTML=`<span style="display:block;line-height:1.3;text-align:center">▶ Riprendi la partita<br><span style="font-weight:600;font-size:12.5px;opacity:.92">${LEVELS[s.level].t} · ${s.company.n} · Anno ${y}, Trim. ${q}</span></span>`;
+    $("resumeWrap").style.display="block";
+    $("startBtn").textContent="Nuova partita →";
+    $("startBtn").className="btn ghost";
+  }
+})();
 $("startBtn").onclick = () => {
   window._name = $("nameInput").value.trim() || "Alex";
   buildStartOffers(); show("s-offers");
@@ -838,6 +853,7 @@ function render(){
   $("endBtn").textContent = G.ap>0 ? `Chiudi il trimestre e affronta la sfida →` : `Affronta la sfida di fine trimestre →`;
   $("jobBtn").classList.toggle('hot', !!G.blocked);
   renderStress(); renderLifestyle(); renderPromo(); renderObjective(); renderFeed();
+  saveGame();
 }
 
 function renderLifestyle(){
@@ -1391,8 +1407,19 @@ async function submitScore(entry){
   return { id, score, rank };
 }
 
+/* ================= SAVE / RESUME (partita in corso) ================= */
+function saveGame(){ if(!G) return; try{ localStorage.setItem('hrq_save', JSON.stringify({...G, log:(G.log||[]).slice(-30)})); }catch(e){} }
+function loadSave(){ try{ return JSON.parse(localStorage.getItem('hrq_save')||'null'); }catch(e){ return null; } }
+function clearSave(){ try{ localStorage.removeItem('hrq_save'); }catch(e){} }
+function resumeGame(){
+  const s=loadSave(); if(!s) return;
+  G=s;
+  initStaticIcons(); buildStatSkeleton(); buildActions();
+  show("s-game"); render();
+}
+
 function winGame(){
-  hideOverlay();
+  hideOverlay(); clearSave();
   const years=G.month/4, compAvg=avg(G.stats);
   const entry={name:(G.name||"Tu").slice(0,24), years:+years.toFixed(2), comp:compAvg, rep:Math.round(G.rep), bank:Math.round(G.bank), ts:Date.now()};
   let grade="B", note="Traguardo pienamente meritato.";
@@ -1429,7 +1456,7 @@ function winGame(){
 
 /* ================= LOSE (BURNOUT) ================= */
 function loseGame(){
-  hideOverlay();
+  hideOverlay(); clearSave();
   const years=(G.month/4).toFixed(1), compAvg=avg(G.stats);
   const card=$("endCard");
   card.innerHTML=`<div class="em" style="color:var(--red)">${icon('stress',60)}</div>
