@@ -1,0 +1,1341 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>HR Quest — La Scalata</title>
+<style>
+  :root{
+    --bg:#0e1220; --bg2:#151b30; --panel:#1b2340; --panel2:#232d52;
+    --line:#2e3a63; --txt:#e8ecf7; --dim:#93a0c4; --dim2:#6b789e;
+    --acc:#6d8bff; --acc2:#9d6bff; --gold:#ffcf5c; --green:#4fd48a;
+    --red:#ff6b7a; --orange:#ff9d4f; --cyan:#7ee0ff;
+    --soft:#4fd48a; --hard:#ff9d4f; --man:#9d6bff;
+    --shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1200px 700px at 80% -10%,rgba(157,107,255,.18),transparent 60%),
+      radial-gradient(900px 600px at -10% 110%,rgba(109,139,255,.16),transparent 55%),
+      var(--bg);
+    color:var(--txt); min-height:100vh; overflow-x:hidden;
+  }
+  .wrap{max-width:920px;margin:0 auto;
+    padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right))
+            calc(48px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  h1,h2,h3{margin:0;font-weight:800;letter-spacing:.2px}
+  .muted{color:var(--dim)}
+  .ico{display:inline-block;vertical-align:-.16em;flex:0 0 auto}
+  .clogo{display:inline-block;vertical-align:-.28em;flex:0 0 auto;border-radius:6px}
+  .hud .clogo,.offer .clogo{vertical-align:middle}
+  .stat .ico,.chip .ico,.act .ico,.lic .ico,.em .ico,.avatar .ico{vertical-align:middle}
+  .avatar{color:#fff}
+  .badge .ico{filter:drop-shadow(0 8px 22px rgba(109,139,255,.5))}
+  .introico{color:var(--acc)}
+  .chip .ic{color:var(--gold)}
+  button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px}
+
+  .screen{display:none;animation:fade .4s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* INTRO */
+  .hero{padding:40px 26px 30px;text-align:center;position:relative;overflow:hidden}
+  .hero .badge{font-size:64px;filter:drop-shadow(0 8px 22px rgba(109,139,255,.5))}
+  .hero h1{font-size:34px;margin:10px 0 4px;
+    background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--dim);max-width:540px;margin:8px auto 0;line-height:1.5}
+  .field{margin:22px auto 0;max-width:360px;text-align:left}
+  .field label{font-size:12px;color:var(--dim);display:block;margin:0 0 6px 2px;text-transform:uppercase;letter-spacing:1px}
+  input[type=text]{width:100%;padding:14px 16px;border-radius:14px;background:var(--bg2);
+    border:1px solid var(--line);color:var(--txt);font-size:16px;outline:none}
+  input[type=text]:focus{border-color:var(--acc)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 22px;border-radius:14px;font-weight:700;font-size:16px;
+    background:linear-gradient(90deg,var(--acc),var(--acc2));color:#fff;
+    box-shadow:0 10px 26px rgba(109,139,255,.4);transition:transform .1s,filter .2s}
+  .btn:active{transform:translateY(2px) scale(.99)}
+  .btn.ghost{background:var(--panel2);box-shadow:none;border:1px solid var(--line)}
+  .btn.block{width:100%}
+  .btn:disabled{opacity:.4;filter:grayscale(.5);cursor:not-allowed}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:12px}
+  .legend span{display:inline-flex;align-items:center;gap:6px;color:var(--dim)}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* OFFERS */
+  .offers{display:grid;gap:14px;margin-top:18px}
+  @media(min-width:640px){.offers{grid-template-columns:1fr 1fr 1fr}}
+  .offer{padding:18px;text-align:center;transition:transform .12s,border-color .2s}
+  .offer:hover{transform:translateY(-4px);border-color:var(--acc)}
+  .offer .logo{font-size:40px}
+  .offer .co{font-weight:800;font-size:16px;margin-top:6px}
+  .offer .tierlbl{font-size:11px;color:var(--dim);margin-top:2px}
+  .offer .role{margin-top:12px;font-size:14px;color:var(--acc)}
+  .offer .sal{font-size:22px;font-weight:800;color:var(--gold);margin-top:8px}
+  .offer .sal small{font-size:12px;color:var(--dim);font-weight:600}
+  .offer .perk{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.4;min-height:34px}
+
+  /* HUD */
+  .hud{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:12px}
+  .avatar{width:52px;height:52px;border-radius:14px;flex:0 0 auto;display:grid;place-items:center;
+    font-size:28px;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:var(--shadow)}
+  .hud .who{flex:1;min-width:0}
+  .hud .who .nm{font-weight:800;font-size:15px}
+  .hud .who .rl{font-size:13px;color:var(--acc);font-weight:700}
+  .hud .who .co{font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .date{text-align:right;font-size:12px;color:var(--dim);flex:0 0 auto}
+  .date .m{font-size:15px;color:var(--txt);font-weight:700}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{flex:1;min-width:96px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+    padding:9px 10px;display:flex;align-items:center;gap:8px}
+  .chip .ic{font-size:18px}
+  .chip .v{font-weight:800;font-size:15px;line-height:1}
+  .chip .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+
+  .promo{padding:14px 16px;margin-bottom:12px}
+  .promo .top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px}
+  .promo .top b{font-size:14px}
+  .track{height:12px;background:var(--bg);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .track > span{display:block;height:100%;border-radius:20px;
+    background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .promo .hint{font-size:12px;color:var(--dim);margin-top:8px}
+  .promo .hint b{color:var(--gold)}
+  .pathbtn{margin-top:11px;width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    padding:9px 12px;border-radius:11px;font-size:12px;font-weight:700;transition:.15s}
+  .pathbtn:hover{border-color:var(--acc);color:var(--txt)}
+
+  /* STRESS BAR */
+  .stressbar{padding:12px 16px;margin-bottom:12px;transition:border-color .3s}
+  .stressbar.crit{border-color:var(--red);animation:pulse 1.1s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 rgba(255,107,122,0)}50%{box-shadow:0 0 22px rgba(255,107,122,.35)}}
+  .sbtop{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:8px}
+  .sbl{font-weight:700}.sbv{font-weight:800}
+  .stressbar .track{height:14px}
+  .sbfill{display:block;height:100%;border-radius:20px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .sbfill.ok  {background:linear-gradient(90deg,#4fd48a,#7ee0ff)}
+  .sbfill.warn{background:linear-gradient(90deg,#a8d84f,#ffcf5c)}
+  .sbfill.mid {background:linear-gradient(90deg,#ffcf5c,#ff9d4f)}
+  .sbfill.high{background:linear-gradient(90deg,#ff9d4f,#ff6b7a)}
+  .sbfill.crit{background:linear-gradient(90deg,#ff6b7a,#ff3d5f)}
+  .sbnote{font-size:11px;color:var(--dim);margin-top:7px}
+  .sbnote.danger{color:var(--red);font-weight:800}
+
+  /* LIFESTYLE */
+  .lifestyle{padding:12px 16px;margin-bottom:12px}
+  .lrow{display:flex;align-items:center;gap:12px}
+  .lic{font-size:26px}
+  .ltxt{flex:1;min-width:0}
+  .ltxt .ll{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;font-weight:800}
+  .ltxt .lname{font-weight:800;font-size:15px}
+  .ltxt .lfx{font-size:11px;color:var(--dim);margin-top:1px}
+  .lbtn{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    padding:9px 15px;border-radius:11px;font-size:12px;font-weight:700;transition:.15s}
+  .lbtn:hover{border-color:var(--acc);color:var(--txt)}
+
+  /* CAREER LADDER (modal) */
+  .ladder{display:flex;flex-direction:column;margin:2px 0 18px;text-align:left}
+  .prow{display:flex;gap:12px;padding:9px 2px}
+  .prow .pdot{width:15px;height:15px;border-radius:50%;background:var(--panel2);border:2px solid var(--line);margin-top:3px;flex:0 0 auto}
+  .prow.done .pdot{background:var(--green);border-color:var(--green)}
+  .prow.cur  .pdot{background:var(--gold);border-color:var(--gold);box-shadow:0 0 12px var(--gold)}
+  .prow .pt{font-weight:800;font-size:14px}
+  .prow.future .pt{color:var(--dim)}
+  .prow .pt .now{color:var(--gold);font-size:12px;font-weight:700}
+  .prow .pd{font-size:12px;color:var(--dim);margin-top:2px;line-height:1.4}
+  .prow .pr{font-size:11px;color:var(--dim2);margin-top:4px;line-height:1.4}
+  .prow.cur{background:linear-gradient(90deg,rgba(255,207,92,.08),transparent);border-radius:10px}
+
+  /* OBJECTIVE */
+  .obj{padding:13px 16px;margin-bottom:12px;border-color:var(--gold);
+    background:linear-gradient(180deg,rgba(255,207,92,.09),var(--bg2))}
+  .obj .row{display:flex;align-items:center;gap:10px}
+  .obj .ic{font-size:22px}
+  .obj .txt{flex:1}
+  .obj .txt .l{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:800}
+  .obj .txt .g{font-weight:700;font-size:14px;margin-top:1px}
+  .obj .txt .p{font-size:12px;color:var(--dim);margin-top:2px}
+  .obj .rew{font-size:11px;text-align:right;color:var(--dim);white-space:nowrap}
+  .obj .rew b{color:var(--gold)}
+  .obj.done{border-color:var(--green);background:linear-gradient(180deg,rgba(79,212,138,.1),var(--bg2))}
+  .obj.done .l{color:var(--green)}
+
+  /* STATS */
+  .stats{padding:14px 16px 8px;margin-bottom:12px}
+  .stats > h3{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+  .cathead{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;text-transform:uppercase;
+    letter-spacing:1px;margin:2px 0 9px}
+  .cathead i{width:9px;height:9px;border-radius:3px;display:inline-block}
+  .catgroup{margin-bottom:6px}
+  .stat{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .stat .ic{font-size:16px;width:20px;text-align:center}
+  .stat .nm{width:110px;font-size:13px;font-weight:600}
+  .stat .bar{flex:1;height:9px;background:var(--bg);border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .stat .bar > span{display:block;height:100%;border-radius:20px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .stat .val{width:28px;text-align:right;font-weight:800;font-size:13px}
+
+  /* ACTIONS */
+  .section-h{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 10px}
+  .section-h h2{font-size:16px}
+  .ap{display:flex;gap:5px;align-items:center}
+  .ap .dot{width:14px;height:14px;border-radius:50%;background:var(--panel2);border:1px solid var(--line)}
+  .ap .dot.on{background:linear-gradient(135deg,var(--gold),var(--orange));border-color:transparent;
+    box-shadow:0 0 10px rgba(255,207,92,.5)}
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(min-width:640px){.acts{grid-template-columns:1fr 1fr 1fr}}
+  .act{padding:12px;text-align:left;background:linear-gradient(180deg,var(--panel),var(--bg2));
+    border:1px solid var(--line);border-radius:15px;transition:transform .1s,border-color .2s,opacity .2s;position:relative}
+  .act:not(:disabled):hover{border-color:var(--acc);transform:translateY(-3px)}
+  .act:active{transform:scale(.97)}
+  .act:disabled{cursor:not-allowed}
+  .act.spent{opacity:.4}
+  .act.spent::after{content:"✓ fatto";position:absolute;top:10px;right:10px;font-size:10px;
+    font-weight:800;color:var(--green)}
+  .act.noap{opacity:.4}
+  .act .catdot{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:3px}
+  .act .ic{font-size:23px}
+  .act .t{font-weight:700;font-size:14px;margin-top:6px}
+  .act .d{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.35;min-height:30px}
+  .act .fx{font-size:11px;margin-top:7px;display:flex;gap:5px;flex-wrap:wrap}
+  .tag{padding:2px 7px;border-radius:20px;font-weight:700;font-size:10px;background:var(--bg)}
+  .tag.up{color:var(--green)}.tag.rep{color:var(--gold)}.tag.str{color:var(--red)}
+  .tag.mon{color:var(--cyan)}.tag.down{color:var(--green)}
+  .tag.ap{color:var(--gold);background:rgba(255,207,92,.12);letter-spacing:1px}
+  .reqtag{font-size:10px;font-weight:800;margin-top:6px;color:var(--red)}
+  .reqtag.met{color:var(--green)}
+  .endmonth{margin-top:16px}
+
+  /* FEED */
+  .feed{margin-top:18px}
+  .feed h3{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin:0 2px 8px}
+  .logline{font-size:13px;color:var(--dim);padding:8px 12px;border-left:2px solid var(--line);margin-bottom:6px;
+    background:linear-gradient(90deg,rgba(255,255,255,.02),transparent);border-radius:0 8px 8px 0;animation:fade .3s}
+  .logline b{color:var(--txt)}
+  .logline .good{color:var(--green)}.logline .bad{color:var(--red)}.logline .gold{color:var(--gold)}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(6,9,20,.72);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;z-index:50;
+    padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))}
+  .overlay.show{display:flex;animation:fade .25s}
+  .modal{max-width:470px;width:100%;padding:24px;box-shadow:var(--shadow);animation:pop .3s cubic-bezier(.2,1.2,.3,1);
+    max-height:92vh;overflow:auto}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+  .modal .em{font-size:44px;text-align:center}
+  .modal h2{font-size:20px;text-align:center;margin:8px 0}
+  .modal .tagline{text-align:center;color:var(--acc);font-size:12px;font-weight:800;margin-bottom:12px;
+    text-transform:uppercase;letter-spacing:1px}
+  .modal p.body{color:var(--dim);line-height:1.55;font-size:14px;text-align:center;margin:0 0 18px}
+  .choices{display:grid;gap:10px}
+  .choice{padding:12px 14px;text-align:left;background:var(--panel2);border:1px solid var(--line);
+    border-radius:13px;transition:border-color .15s,transform .1s;position:relative}
+  .choice:not(:disabled):hover{border-color:var(--acc)}
+  .choice:not(:disabled):active{transform:scale(.98)}
+  .choice:disabled{opacity:.5;cursor:not-allowed}
+  .choice .ct{font-weight:700;font-size:14px}
+  .choice .cd{font-size:12px;color:var(--dim);margin-top:2px}
+  .choice .rq{font-size:11px;font-weight:800;margin-top:5px;display:inline-block}
+  .choice .rq.ok{color:var(--green)}
+  .choice .rq.lock{color:var(--red)}
+  .choice .fx{margin-top:6px}
+  .cashline{text-align:center;font-size:13px;color:var(--dim);margin:0 0 14px;
+    padding:9px 12px;border-radius:11px;background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.28)}
+  .cashline b{color:var(--gold);font-size:15px}
+  .cashline .cashsub{color:var(--dim2);font-size:11px}
+
+  /* END */
+  .fin{text-align:center;padding:36px 24px}
+  .fin .em{font-size:70px;filter:drop-shadow(0 8px 22px rgba(255,207,92,.5))}
+  .fin h1{font-size:30px;margin:12px 0 6px}
+  .grade{display:inline-block;font-size:40px;font-weight:900;
+    background:linear-gradient(90deg,var(--gold),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .recap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+  .recap .b{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .recap .b .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+  .recap .b .v{font-size:18px;font-weight:800;margin-top:2px}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(30px);
+    background:var(--panel2);border:1px solid var(--acc);padding:12px 20px;border-radius:14px;
+    font-weight:700;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:.35s;pointer-events:none;z-index:60;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.good{border-color:var(--green)}.toast.bad{border-color:var(--red)}
+
+  /* LEADERBOARD */
+  .lblist{display:flex;flex-direction:column;gap:8px;margin:6px 0 18px;text-align:left}
+  .lbrow{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid var(--line);
+    border-radius:13px;background:var(--bg2)}
+  .lbrow.you{border-color:var(--gold);background:linear-gradient(90deg,rgba(255,207,92,.1),var(--bg2))}
+  .lbmedal{flex:0 0 auto;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    font-weight:800;font-size:13px;background:var(--panel2);color:var(--dim)}
+  .lbmedal.m1{background:linear-gradient(135deg,#ffcf5c,#ff9d4f);color:#3a2a06}
+  .lbmedal.m2{background:linear-gradient(135deg,#d7dced,#9aa6c4);color:#20263a}
+  .lbmedal.m3{background:linear-gradient(135deg,#e0a370,#b9764a);color:#2a1608}
+  .lbmain{flex:1;min-width:0}
+  .lbname{font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px}
+  .lbtag{font-size:10px;font-weight:800;color:var(--gold);background:rgba(255,207,92,.14);
+    padding:1px 6px;border-radius:20px}
+  .lbstats{display:flex;flex-wrap:wrap;gap:4px 9px;font-size:11px;color:var(--dim);margin-top:3px}
+  .lbstats span{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+  .lbscore{flex:0 0 auto;font-weight:800;font-size:16px;color:var(--gold);text-align:right}
+  .lbscore small{display:block;font-size:9px;color:var(--dim);font-weight:700}
+  .lbbanner{margin:2px 0 14px;padding:10px 12px;border-radius:12px;font-size:13px;
+    background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.28);color:var(--txt)}
+  .lbbanner b{color:var(--gold)}
+
+  /* Phones (narrow) */
+  @media(max-width:390px){
+    .chip{min-width:0;padding:8px 9px;gap:6px}
+    .chip .v{font-size:14px}
+    .chip .l{font-size:9px}
+    .hud{gap:10px;padding:12px 13px}
+    .avatar{width:46px;height:46px}
+    .section-h h2{font-size:15px}
+    .stat .nm{width:92px}
+    .act{padding:11px}
+    .modal{padding:20px 18px}
+    .modal h2{font-size:18px}
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- INTRO -->
+  <section id="s-intro" class="screen active">
+    <div class="card hero">
+      <div class="badge" id="introBadge"></div>
+      <h1>HR Quest</h1>
+      <div class="muted" style="font-weight:700;letter-spacing:2px;font-size:12px">LA SCALATA · DA NEOLAUREATO A HR DIRECTOR</div>
+      <p>Un gioco di ruolo sulla carriera nelle Risorse Umane. Costruisci le tue competenze — soft, hard e
+         manageriali — supera la sfida di ogni trimestre e scala le aziende, da una startup alla multinazionale.</p>
+      <div class="legend">
+        <span><i style="background:var(--soft)"></i>Soft HR</span>
+        <span><i style="background:var(--hard)"></i>Hard HR</span>
+        <span><i style="background:var(--man)"></i>Manageriali</span>
+      </div>
+      <div class="field">
+        <label>Come ti chiami?</label>
+        <input id="nameInput" type="text" placeholder="Il tuo nome" maxlength="18" autocomplete="off">
+      </div>
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" id="startBtn">Inizia la carriera →</button>
+        <button class="btn ghost" id="introLbBtn">🏆 Classifica</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIRST OFFERS -->
+  <section id="s-offers" class="screen">
+    <div style="text-align:center;margin:10px 0 4px">
+      <h1 style="font-size:24px">Le tue prime offerte</h1>
+      <p class="muted" style="max-width:520px;margin:8px auto 0;font-size:14px;line-height:1.5">
+        Fresco di laurea, tre aziende ti vogliono. Scegli dove iniziare: contano stipendio, ruolo e
+        soprattutto quanto ti faranno crescere.</p>
+    </div>
+    <div class="offers" id="startOffers"></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="s-game" class="screen">
+    <div class="card hud">
+      <div class="avatar" id="avatar">🧑‍💼</div>
+      <div class="who">
+        <div class="nm" id="hName">—</div>
+        <div class="rl" id="hRole">—</div>
+        <div class="co" id="hCo">—</div>
+      </div>
+      <div class="date">
+        <div class="m" id="hMonth">Trim. 1/4</div>
+        <div id="hYear">Anno 1</div>
+      </div>
+    </div>
+
+    <div class="chips">
+      <div class="chip"><div class="ic" id="icMoney"></div><div><div class="v" id="cMoney">0</div><div class="l">Stipendio</div></div></div>
+      <div class="chip"><div class="ic" id="icRep"></div><div><div class="v" id="cRep">0</div><div class="l">Reputazione</div></div></div>
+      <div class="chip"><div class="ic" id="icBank"></div><div><div class="v" id="cBank">0€</div><div class="l">Risparmi</div></div></div>
+    </div>
+
+    <div class="card stressbar" id="stressCard">
+      <div class="sbtop"><span class="sbl" id="sbIc">🔥 Stress</span><span class="sbv" id="sbVal">0 / 100</span></div>
+      <div class="track"><span class="sbfill ok" id="sbFill" style="width:0%"></span></div>
+      <div class="sbnote" id="sbNote"></div>
+    </div>
+
+    <div class="card lifestyle" id="lifeCard">
+      <div class="lrow">
+        <div class="lic" id="lifeIc">🏠</div>
+        <div class="ltxt"><div class="ll">Stile di vita</div>
+          <div class="lname" id="lifeName">Normale</div><div class="lfx" id="lifeFx"></div></div>
+        <button class="lbtn" id="lifeBtn">Cambia</button>
+      </div>
+    </div>
+
+    <div class="card promo">
+      <div class="top"><span class="muted">Prossimo traguardo</span><b id="pNext">—</b></div>
+      <div class="track"><span id="pBar" style="width:0%"></span></div>
+      <div class="hint" id="pHint"></div>
+      <button class="pathbtn" id="pathBtn"></button>
+    </div>
+
+    <div class="card obj" id="objCard">
+      <div class="row">
+        <div class="ic" id="objIc">🎯</div>
+        <div class="txt"><div class="l">Obiettivo del trimestre</div>
+          <div class="g" id="objG">—</div><div class="p" id="objP"></div></div>
+        <div class="rew" id="objRew"></div>
+      </div>
+    </div>
+
+    <div class="card stats">
+      <h3>Competenze</h3>
+      <div id="statList"></div>
+    </div>
+
+    <div class="section-h">
+      <h2><span id="secIcon"></span> Trimestre <span id="mNum">1</span> — spendi i 3 PA</h2>
+      <div class="ap" id="apDots"></div>
+    </div>
+    <div class="acts" id="actList"></div>
+
+    <button class="btn block ghost endmonth" id="endBtn">Affronta la sfida di fine trimestre →</button>
+
+    <div class="feed">
+      <h3>Diario di bordo</h3>
+      <div id="feed"></div>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section id="s-end" class="screen">
+    <div class="card fin" id="endCard"></div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay"><div class="card modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ================= DATA ================= */
+
+const CATS = {
+  soft:{name:"Soft HR",      col:"var(--soft)"},
+  hard:{name:"Hard HR",      col:"var(--hard)"},
+  man: {name:"Manageriali",  col:"var(--man)"},
+};
+
+const STATS = [
+  {k:"sel", name:"Selezione",       ic:"selezione",      cat:"soft"},
+  {k:"for", name:"Formazione",      ic:"formazione",     cat:"soft"},
+  {k:"org", name:"Organizzazione",  ic:"organizzazione", cat:"soft"},
+  {k:"amm", name:"Amministrazione", ic:"amministrazione",cat:"hard"},
+  {k:"con", name:"Contenzioso",     ic:"contenzioso",    cat:"hard"},
+  {k:"sin", name:"Sindacale",       ic:"sindacale",      cat:"hard"},
+  {k:"lea", name:"Leadership",      ic:"leadership",     cat:"man"},
+  {k:"rel", name:"Relazionali",     ic:"relazionali",    cat:"man"},
+];
+const STAT = k => STATS.find(s=>s.k===k);
+const STAT_COL = k => CATS[STAT(k).cat].col;
+
+/* ===== ORIGINAL ICON SET (SVG, inherits currentColor) ===== */
+const ICONS = {
+  selezione:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
+  formazione:'<path d="M2.5 8.5 12 4.2l9.5 4.3L12 12.8z"/><path d="M6.5 11v4.4c0 1.4 2.5 2.6 5.5 2.6s5.5-1.2 5.5-2.6V11"/><path d="M21.5 8.5v5"/>',
+  organizzazione:'<rect x="9" y="3" width="6" height="4.6" rx="1"/><rect x="3" y="15.4" width="6" height="4.6" rx="1"/><rect x="15" y="15.4" width="6" height="4.6" rx="1"/><path d="M12 7.6v3.4M6 15.4v-2.4h12v2.4"/>',
+  amministrazione:'<path d="M6.5 2.5h7l4.5 4.5V21a.5.5 0 0 1-.5.5H6.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M13 2.8V7.5h4.7"/><path d="M9 12.5h6M9 15.5h6M9 18.3h4"/>',
+  contenzioso:'<path d="M12 3.4v15.2M6.5 18.6h11M4.5 7.4h15M12 3.4 4.5 7.4M12 3.4l7.5 4"/><path d="M4.5 7.4 2 13a2.5 2.5 0 0 0 5 0z"/><path d="M19.5 7.4 17 13a2.5 2.5 0 0 0 5 0z"/>',
+  sindacale:'<path d="M7 3v18"/><path d="M7 4.2c3-1.5 6 1.4 10 0v7.4c-4 1.4-7-1.5-10 0"/>',
+  leadership:'<path d="M3 8.5l4.2 3.2L12 5l4.8 6.7L21 8.5l-1.5 10.6H4.5z"/><path d="M4.6 18.6h14.8"/>',
+  relazionali:'<circle cx="8" cy="8.5" r="3"/><circle cx="16" cy="8.5" r="3"/><path d="M2.5 19.6c0-3.1 2.4-4.9 5.5-4.9 1.4 0 2.7.4 3.7 1.1M12.3 15.8c1-.7 2.3-1.1 3.7-1.1 3.1 0 5.5 1.8 5.5 4.9"/>',
+  network:'<circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4"/><path d="M12 3.8c2.5 2.3 2.5 13.9 0 16.4M12 3.8c-2.5 2.3-2.5 13.9 0 16.4"/>',
+  corso:'<path d="M12 6.2C10 4.8 7 4.3 4 4.8v12.5c3-.5 6 0 8 1.4 2-1.4 5-1.9 8-1.4V4.8c-3-.5-6 0-8 1.4z"/><path d="M12 6.2v12.5"/>',
+  riposo:'<circle cx="12" cy="9.4" r="3.4"/><path d="M12 2.6v2M4.6 9.4h-2M21.4 9.4h-2M6.4 3.8 7.8 5.2M17.6 3.8 16.2 5.2"/><path d="M2.5 20h19"/>',
+  stipendio:'<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.8"/><path d="M6 9.5v5M18 9.5v5"/>',
+  reputazione:'<path fill="currentColor" stroke="none" d="M12 2.6l2.7 5.5 6 .9-4.35 4.24 1.03 6L12 16.9 6.62 19.24l1.03-6L3.3 9l6-.9z"/>',
+  stress:'<path d="M12 2.5c3 3.6 5 6 5 9.6a5 5 0 0 1-10 0c0-1.9.9-3.4 2.2-4.7.4 1.3 1.3 2 2.1 2.2.9-2.1-.6-4.2 1.5-7.1z"/>',
+  risparmi:'<path d="M3 9.5 12 4l9 5.5"/><path d="M4.6 9.5v9M19.4 9.5v9M8.6 11.6v5M12 11.6v5M15.4 11.6v5"/><path d="M3 19.5h18"/>',
+  life_frugale:'<circle cx="12" cy="12" r="8"/><path d="M14.6 9.4c-.6-.9-1.6-1.4-2.6-1.4-1.7 0-3 1.8-3 4s1.3 4 3 4c1 0 2-.5 2.6-1.4M8.5 11h5M8.5 13h5"/>',
+  life_normale:'<path d="M4 11.2 12 5l8 6.2"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',
+  life_confortevole:'<path d="M7.5 3.5h9l-1 6.2a3.5 3.5 0 0 1-7 0z"/><path d="M12 16v4.5M8.5 20.5h7"/>',
+  life_lussuoso:'<path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M9.5 4 7 9l5 11 5-11-2.5-5"/>',
+  avatar:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+  calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+  ladder:'<path d="M7 3v18M17 3v18M7 7.5h10M7 12h10M7 16.5h10"/>',
+  offer:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.6 6.5 12 13l8.4-6.5"/>',
+  trophy:'<path d="M7 4h10v3.5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.2v1.8a3 3 0 0 0 3 3M17 5.5h2.8v1.8a3 3 0 0 1-3 3"/><path d="M12 12.5v4M9.5 20.5h5M10 16.5h4l.6 4h-5.2z"/>',
+  spark:'<path d="M12 3v3.4M12 17.6V21M3 12h3.4M17.6 12H21M6 6l2.4 2.4M18 6l-2.4 2.4M6 18l2.4-2.4M18 18l-2.4-2.4"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 1.9"/>',
+  puzzle:'<path d="M9 4a1.5 1.5 0 0 1 3 0c0 .8.6 1.2 1.4 1H16v2.6c.2.8.7 1.4 1.5 1.4a1.5 1.5 0 0 1 0 3c-.8 0-1.3.6-1.5 1.4V20h-2.6c-.8-.2-1.4.4-1.4 1.2a1.5 1.5 0 0 1-3 0c0-.8-.6-1.4-1.4-1.2H4v-2.6C4.2 14.6 3.6 14 2.8 14a1.5 1.5 0 0 1 0-3c.8 0 1.4-.6 1.2-1.4V7h2.6C7.4 7.2 8 6.8 8 6"/>',
+  // --- imprevisti (scenario) ---
+  imp_multa:'<path d="M12 3.5 21.5 20.5H2.5z"/><path d="M12 9.5v4.2"/><path d="M12 16.9v.1"/>',
+  imp_vet:'<path d="M8.4 12.7c-1.6.8-2 2.4-.8 3.4 1 .8 1.7.2 3.4.2s2.4.6 3.4-.2c1.2-1 .8-2.6-.8-3.4-1.2-.6-2.6-.6-4.2 0z"/><circle cx="7.2" cy="9.2" r="1.3"/><circle cx="11.4" cy="7.6" r="1.3"/><circle cx="15.6" cy="9.2" r="1.3"/>',
+  imp_phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 6l2 3-2.2 2 3 2.4"/>',
+  imp_family:'<circle cx="7" cy="8" r="2.3"/><circle cx="17" cy="8" r="2.3"/><circle cx="12" cy="12" r="1.7"/><path d="M3.6 19.5c0-2.3 1.5-3.6 3.4-3.6M20.4 19.5c0-2.3-1.5-3.6-3.4-3.6M9 19.5c0-1.8 1.3-2.9 3-2.9s3 1.1 3 2.9"/>',
+  imp_tax:'<path d="M6 2.5h12v19l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 7.5h6M9 11h6M9.5 14.5h5"/>',
+  imp_win:'<circle cx="12" cy="12" r="8"/><path d="M12 16V8.4M9 11l3-3 3 3"/>',
+  imp_car:'<path d="M4 16v-3l1.8-4.5h12.4L20 13v3"/><path d="M4 16h16v2.6h-2.3M4 18.6h2.3"/><circle cx="7.5" cy="18.6" r="1.4"/><circle cx="16.5" cy="18.6" r="1.4"/>',
+  imp_tooth:'<path d="M7 3.6C5.3 3.6 4 5 4 7c0 2.2.8 3.4 1.3 6 .3 1.8.4 4.4 1.7 4.4 1.1 0 1.3-1.9 1.6-3.5.2-1 .5-1.9 1.4-1.9s1.2.9 1.4 1.9c.3 1.6.5 3.5 1.6 3.5 1.3 0 1.4-2.6 1.7-4.4.5-2.6 1.3-3.8 1.3-6 0-2-1.3-3.4-3-3.4-1.2 0-1.9.8-2.9.8s-1.7-.8-2.9-.8z"/>',
+  imp_pc:'<rect x="3.5" y="5" width="17" height="11" rx="1.5"/><path d="M2 19.5h20M9.5 16l-.7 3.5M14.5 16l.7 3.5"/>',
+  imp_boiler:'<path d="M14.8 6.2a3.6 3.6 0 0 0-4.6 4.6l-6.1 6.1a1.7 1.7 0 0 0 2.4 2.4l6.1-6.1a3.6 3.6 0 0 0 4.6-4.6l-2.2 2.2-2-.5-.5-2z"/>',
+  // --- sfide (scenario) ---
+  ch_sciopero:'<path d="M4.5 10v3.6l9.5 3.8V6.2z"/><path d="M4.5 10 3 10.6v2.4l1.5.6M8.5 16.6v2a1.4 1.4 0 0 0 2.8 0v-.9"/><path d="M16.6 9.3a3.8 3.8 0 0 1 0 5.4"/>',
+  ch_licenziamento:'<path d="M4 3.5h8v17H4z"/><path d="M12 12h7M16 9l3 3-3 3"/><circle cx="9.4" cy="12" r=".9" fill="currentColor" stroke="none"/>',
+  ch_selezione:'<circle cx="9.5" cy="9" r="3.6"/><path d="M3.6 19.6c0-3 2.6-4.8 5.9-4.8.8 0 1.6.1 2.3.4"/><circle cx="16.6" cy="16.6" r="3.1"/><path d="M18.9 18.9 21.5 21.5"/>',
+  ch_ispezione:'<rect x="5.5" y="4" width="13" height="16.5" rx="2"/><path d="M9.5 4V2.7h5V4"/><path d="M8.8 11.6l2 2 4.2-4.2"/>',
+  ch_reskilling:'<circle cx="11" cy="7" r="3"/><path d="M5 20c0-3.3 2.7-5 6-5 1 0 2 .15 2.8.5"/><path d="M18 10.2V4.6M15.6 7 18 4.6l2.4 2.4"/>',
+  ch_capo:'<circle cx="7" cy="8" r="2.6"/><circle cx="17" cy="8" r="2.6"/><path d="M3.6 19c0-2.6 1.7-4 3.4-4M20.4 19c0-2.6-1.7-4-3.4-4"/><path d="M12.4 5.4 10.8 9h2.7l-1.5 3.3"/>',
+  ch_reorg:'<path d="M19.6 12a7.6 7.6 0 1 1-2.3-5.4"/><path d="M20 4.4v4.2h-4.2"/>',
+  ch_clima:'<path d="M14.5 13.7V6.6a2.5 2.5 0 0 0-5 0v7.1a4 4 0 1 0 5 0z"/><path d="M12 9v6.4"/><circle cx="12" cy="17.4" r="1.8" fill="currentColor" stroke="none"/>',
+};
+function icon(key, size=20, cls=""){
+  return `<svg class="ico ${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[key]||''}</svg>`;
+}
+// Generative company logo: two-tone diagonal tile + monogram, colour derived from the name.
+function hueFromString(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%360; return h; }
+let _lgId=0;
+function companyLogo(company, size=22){
+  const id="clg"+(_lgId++);
+  const h=hueFromString(company.n);
+  const c1=`hsl(${h} 62% 56%)`, c2=`hsl(${(h+42)%360} 66% 42%)`;
+  const ini=((company.n.match(/[A-Za-z]/)||['?'])[0]).toUpperCase();
+  return `<svg class="clogo" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">
+    <clipPath id="${id}"><rect x="1.5" y="1.5" width="21" height="21" rx="6"/></clipPath>
+    <g clip-path="url(#${id})"><rect x="1.5" y="1.5" width="21" height="21" fill="${c1}"/><path d="M1.5 23 L23 6.5 V23 Z" fill="${c2}"/></g>
+    <text x="12" y="16.2" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="-apple-system,Segoe UI,Roboto,sans-serif">${ini}</text>
+  </svg>`;
+}
+
+// Career ladder (alberatura). next = competences required for the NEXT role;
+// minQ = minimum quarters in this role before promoting (~2 years). companyTier gates max level.
+const LEVELS = [
+  {t:"HR Assistant",        desc:"L'ingresso. Impari selezione e amministrazione di base.",
+   next:{sel:22, amm:20, org:18}, minQ:6},
+  {t:"HR Generalist",       desc:"Copri le HR a 360°: formazione, processi, relazioni.",
+   next:{for:34, org:34, rel:30}, minQ:8},
+  {t:"HR Business Partner", desc:"Il riferimento HR del business: persone, decisioni, contenzioso.",
+   next:{sel:46, con:40, lea:44, rel:42}, minQ:8},
+  {t:"HR Manager",          desc:"Guidi un team HR e i suoi progetti.",
+   next:{lea:60, rel:56, org:54, sin:48}, minQ:8},
+  {t:"Senior HR Manager",   desc:"Gestisci relazioni complesse, sindacato e contenzioso.",
+   next:{lea:74, rel:68, sin:64, con:62, amm:58}, minQ:8},
+  {t:"HR Director",         desc:"Il vertice: la strategia HR dell'intera azienda.", next:null},
+];
+
+const TIERS = [
+  {tier:0, label:"Startup",           size:"< 50 dip.",       maxLevel:2, salMul:1.0,  strMul:0.9},
+  {tier:1, label:"PMI / Scale-up",    size:"50–250 dip.",     maxLevel:3, salMul:1.35, strMul:1.0},
+  {tier:2, label:"Azienda Corporate", size:"250–2000 dip.",   maxLevel:4, salMul:1.8,  strMul:1.15},
+  {tier:3, label:"Multinazionale",    size:"2000+ dip.",      maxLevel:5, salMul:2.5,  strMul:1.35},
+];
+
+const COMPANIES = {
+  0:[{n:"PixelForge",logo:"🎮"},{n:"GreenSprout",logo:"🌱"},{n:"Nimbus Labs",logo:"🚀"},{n:"BeanCode",logo:"☕"},{n:"Fluxo",logo:"⚡"}],
+  1:[{n:"Meridian Group",logo:"🏢"},{n:"Aurora Retail",logo:"🛍️"},{n:"Delta Logistica",logo:"📦"},{n:"Verde Foods",logo:"🥗"},{n:"Cima Sport",logo:"⛰️"}],
+  2:[{n:"TechNova Corp",logo:"💻"},{n:"Sanitas Health",logo:"🏥"},{n:"FinPrime Bank",logo:"🏦"},{n:"Aureo Energia",logo:"🔋"},{n:"Marconi Media",logo:"📡"}],
+  3:[{n:"Global Dynamics",logo:"🌐"},{n:"OmniCorp Intl.",logo:"🏙️"},{n:"Vanta Worldwide",logo:"✈️"},{n:"Everest Pharma",logo:"💊"},{n:"Solaris Motors",logo:"🚗"}],
+};
+
+// Activities — cost 1 or 2 PA. NOT repeatable within the same quarter.
+// Cheap actions = broad/light. Costly (2 PA) actions = deep, bigger payoff.
+const ACTIONS = [
+  {id:"colloqui",  ic:"selezione",      cat:"soft", ap:1, t:"Fai colloqui",           d:"Selezioni candidati per le posizioni aperte.",     eff:{sel:5, rep:1, stress:4}},
+  {id:"formazione",ic:"formazione",     cat:"soft", ap:2, t:"Piano di formazione",    d:"Progetti un percorso formativo strutturato per l'azienda.", eff:{for:9, lea:3, rep:2, stress:6}, req:{k:"org", v:12}},
+  {id:"organizza", ic:"organizzazione", cat:"soft", ap:2, t:"Riorganizza i processi", d:"Rimetti mano a flussi, ruoli e procedure HR.",     eff:{org:9, amm:3, stress:6}, req:{k:"amm", v:10}},
+  {id:"admin",     ic:"amministrazione",cat:"hard", ap:1, t:"Amministrazione",        d:"Contratti, buste paga, adempimenti.",              eff:{amm:5, org:1, stress:4}},
+  {id:"contenz",   ic:"contenzioso",    cat:"hard", ap:2, t:"Gestisci un contenzioso", d:"Vertenze, diffide, pratiche legali complesse.",   eff:{con:9, amm:3, rep:2, stress:10}, req:{k:"amm", v:12}},
+  {id:"sindacale", ic:"sindacale",      cat:"hard", ap:2, t:"Trattativa sindacale",   d:"Tavoli con le RSU e contrattazione collettiva.",   eff:{sin:9, con:3, rep:2, stress:10}, req:{k:"con", v:15}},
+  {id:"guida",     ic:"leadership",     cat:"man",  ap:2, t:"Guida il team",          d:"Deleghi, motivi e sviluppi le persone.",           eff:{lea:9, rel:3, rep:2, stress:7}, req:{k:"rel", v:12}},
+  {id:"capo",      ic:"relazionali",    cat:"man",  ap:1, t:"Curi il rapporto col capo", d:"Allinei aspettative e costruisci fiducia.",     eff:{rel:5, rep:2, stress:3}},
+  {id:"network",   ic:"network",        cat:"man",  ap:1, t:"Networking",             d:"Eventi e contatti: la tua reputazione cresce.",    eff:{rep:5, sin:1, stress:2}},
+  {id:"corso",     ic:"corso",          cat:"none", ap:1, t:"Corso di aggiornamento", d:"Studi. Costa risparmi ma cresci a 360°.",          eff:{sel:2, for:2, con:2, stress:3}, cost:600},
+  {id:"riposo",    ic:"riposo",         cat:"none", ap:1, t:"Stacca la spina",        d:"Una vacanza: abbassi molto lo stress. Costa in base al tuo tenore di vita.", eff:{stress:-20, rep:-1}, cost:1600, costScales:true},
+];
+
+// End-of-month challenges. Options gated by competences (req scales with level). Always one fallback.
+const CHALLENGES = [
+  {sv:"ch_sciopero", h:"Sciopero indetto", tag:"Sindacale",
+   body:"Le RSU minacciano uno sciopero che bloccherebbe la produzione. Tutti guardano te.",
+   opts:[
+     {ct:"Conduci il tavolo di trattativa", req:{k:"sin",v:24}, eff:{sin:4, rel:2, rep:4, stress:6}, res:"Accordo trovato: sciopero evitato."},
+     {ct:"Inquadri tutto sul piano legale",  req:{k:"con",v:24}, eff:{con:4, rep:2, stress:7}, res:"Gestione formale, tensione ma tenuta."},
+     {ct:"Cedi alle richieste economiche",   req:null, eff:{rep:-4, stress:-2}, res:"Sciopero evitato pagando: reputazione giù."},
+   ]},
+  {sv:"ch_licenziamento", h:"Licenziamento contestato", tag:"Contenzioso",
+   body:"Un manager vuole licenziare un dipendente. Il rischio di causa è concreto.",
+   opts:[
+     {ct:"Prepari un dossier a prova di causa", req:{k:"con",v:26}, eff:{con:5, amm:2, rep:3, stress:7}, res:"Procedura blindata, nessuna causa."},
+     {ct:"Gestisci con empatia e un accordo",   req:{k:"rel",v:24}, eff:{rel:4, rep:3, stress:4}, res:"Uscita consensuale, tutti salvano la faccia."},
+     {ct:"Procedi in fretta e speri bene",      req:null, eff:{rep:-5, stress:3}, res:"Rischio causa aperto: reputazione a rischio."},
+   ]},
+  {sv:"ch_selezione", h:"Posizione critica scoperta", tag:"Selezione",
+   body:"Un ruolo chiave è vacante e la linea preme per riempirlo subito.",
+   opts:[
+     {ct:"Attivi ricerca mirata e referral", req:{k:"sel",v:28}, eff:{sel:5, org:2, rep:3, stress:6}, res:"Candidato forte chiuso in tempi record."},
+     {ct:"Riorganizzi i carichi nel frattempo", req:{k:"org",v:26}, eff:{org:5, rep:2, stress:5}, res:"Ponte organizzativo ben gestito."},
+     {ct:"Prendi il primo CV disponibile", req:null, eff:{rep:-3, stress:2}, res:"Assunzione affrettata: qualità incerta."},
+   ]},
+  {sv:"ch_ispezione", h:"Ispezione del lavoro", tag:"Amministrazione",
+   body:"Arriva un'ispezione a sorpresa su contratti e buste paga.",
+   opts:[
+     {ct:"Presenti pratiche impeccabili", req:{k:"amm",v:28}, eff:{amm:5, rep:4, stress:5}, res:"Tutto in regola, ispezione superata."},
+     {ct:"Ti fai assistere sul contenzioso", req:{k:"con",v:24}, eff:{con:3, amm:2, stress:6}, res:"Qualche rilievo ma nessuna sanzione grave."},
+     {ct:"Improvvisi con quello che hai", req:null, eff:{rep:-4, stress:6}, res:"Rilievi e una piccola sanzione."},
+   ]},
+  {sv:"ch_reskilling", h:"Reskilling urgente", tag:"Formazione",
+   body:"La direzione vuole riqualificare un intero reparto in tre mesi.",
+   opts:[
+     {ct:"Progetti un percorso su misura", req:{k:"for",v:26}, eff:{for:5, lea:2, rep:3, stress:5}, res:"Piano di reskilling apprezzato dai vertici."},
+     {ct:"Motivi e guidi il cambiamento", req:{k:"lea",v:24}, eff:{lea:4, rel:2, rep:2, stress:5}, res:"Team a bordo, cambiamento accettato."},
+     {ct:"Compri corsi standard a catalogo", req:null, eff:{rep:-2, stress:2}, res:"Soluzione generica, impatto modesto."},
+   ]},
+  {sv:"ch_capo", h:"Scontro col tuo capo", tag:"Relazioni",
+   body:"Il tuo responsabile boccia la tua proposta davanti a tutti.",
+   opts:[
+     {ct:"Ricuci il rapporto a quattr'occhi", req:{k:"rel",v:26}, eff:{rel:5, rep:3, stress:4}, res:"Fiducia ricostruita, alleanza rafforzata."},
+     {ct:"Dimostri il valore con i risultati", req:{k:"lea",v:26}, eff:{lea:4, rep:2, stress:6}, res:"I fatti ti danno ragione."},
+     {ct:"Ingoi il rospo e vai avanti", req:null, eff:{rep:-2, stress:5}, res:"Rapporto teso, un po' di frustrazione."},
+   ]},
+  {sv:"ch_reorg", h:"Riorganizzazione aziendale", tag:"Change",
+   body:"Due reparti vanno fusi. Tocca a te guidare il processo senza rivolte.",
+   opts:[
+     {ct:"Guidi il change con visione", req:{k:"lea",v:30}, eff:{lea:5, org:2, rep:4, stress:8}, res:"Transizione ordinata, morale tenuto."},
+     {ct:"Blindi l'accordo con i sindacati", req:{k:"sin",v:26}, eff:{sin:5, rep:3, stress:7}, res:"Nessun conflitto sindacale."},
+     {ct:"Applichi il piano dall'alto e basta", req:null, eff:{rep:-4, stress:6}, res:"Malumori diffusi nel personale."},
+   ]},
+  {sv:"ch_clima", h:"Clima aziendale a picco", tag:"People",
+   body:"L'ultima survey è pessima: l'engagement è ai minimi storici.",
+   opts:[
+     {ct:"Lanci un piano d'ascolto strutturato", req:{k:"org",v:28}, eff:{org:4, rel:2, rep:4, stress:6}, res:"Piano credibile, fiducia in ripresa."},
+     {ct:"Metti al centro le persone, di persona", req:{k:"rel",v:26}, eff:{rel:5, rep:3, stress:5}, res:"Vicinanza percepita, il clima migliora."},
+     {ct:"Rimandi al prossimo trimestre", req:null, eff:{rep:-4, stress:-2}, res:"Problema congelato, non risolto."},
+   ]},
+];
+
+const OBJ_REWARD = {rep:5, bank:700};
+
+// Lifestyle: spend more → meno stress e più reputazione. Uno stile che già stressa
+// (stressQ>0) accumula "logoramento" incrementale se lo tieni troppo a lungo.
+const LIFESTYLES = [
+  {ic:"life_frugale",      name:"Frugale",      costMul:0.6, stressQ:+3, repQ:-1, poor:true, desc:"Risparmi parecchio, ma tirare la cinghia logora."},
+  {ic:"life_normale",      name:"Normale",      costMul:1.0, stressQ:+1, repQ:0,  poor:true, desc:"Vita equilibrata, ma a lungo andare pesa un po'."},
+  {ic:"life_confortevole", name:"Confortevole", costMul:1.5, stressQ:-3, repQ:+1, habituates:true, desc:"Piccoli lussi che ti fanno stare bene… finché non ci fai l'abitudine."},
+  {ic:"life_lussuoso",     name:"Lussuoso",     costMul:2.0, stressQ:-6, repQ:+2, desc:"Alto tenore: rilassa e alza il tuo standing, ma svuota il conto."},
+];
+
+// End-of-quarter economic surprises. amt scales a bit with company tier.
+// gain=true → soldi in entrata. mkChoices=(amt)=>opzioni → imprevisto con scelta.
+const IMPREVISTI = [
+  {sv:"imp_multa",  t:"Multa inaspettata",     min:150, max:500},
+  {sv:"imp_vet",    t:"Spese veterinarie",     min:250, max:600},
+  {sv:"imp_phone",  t:"Telefono rotto",        min:200, max:450},
+  {sv:"imp_family", t:"Spese per la famiglia", min:300, max:800},
+  {sv:"imp_tax",    t:"Rimborso fiscale",      min:300, max:700, gain:true},
+  {sv:"imp_win",    t:"Piccola vincita",       min:200, max:600, gain:true},
+  {sv:"imp_car", t:"L'auto si è rotta", min:400, max:900, mkChoices:a=>[
+    {ct:"Ripari subito",            cd:`−${eur(a)}`,                                    eff:{bank:-a},          res:"Auto sistemata, portafoglio più leggero."},
+    {ct:"A piedi per un trimestre", cd:`+8 ${icon('stress',11)} · −2 ${icon('reputazione',11)}`, eff:{stress:8, rep:-2}, res:"Risparmi, ma è faticoso e poco elegante."}]},
+  {sv:"imp_tooth", t:"Un dente ti fa male", min:300, max:700, mkChoices:a=>[
+    {ct:"Vai dal dentista", cd:`−${eur(a)}`,                    eff:{bank:-a},    res:"Sorriso salvo."},
+    {ct:"Stringi i denti",  cd:`+10 ${icon('stress',11)}`,      eff:{stress:10},  res:"Il dolore ti logora per settimane."}]},
+  {sv:"imp_pc", t:"Il PC si è rotto", min:300, max:700, mkChoices:a=>[
+    {ct:"Ne compri uno nuovo",   cd:`−${eur(a)}`,                                            eff:{bank:-a},          res:"Di nuovo operativo."},
+    {ct:"Ti arrangi col vecchio",cd:`+6 ${icon('stress',11)} · −3 ${icon('organizzazione',11)}`, eff:{stress:6, org:-3}, res:"Lentezze e frustrazione continue."}]},
+  {sv:"imp_boiler", t:"La caldaia si è guastata", min:500, max:1200, mkChoices:a=>[
+    {ct:"La sostituisci",    cd:`−${eur(a)}`,               eff:{bank:-a},    res:"Casa di nuovo calda."},
+    {ct:"Rimandi e ti copri",cd:`+9 ${icon('stress',11)}`,  eff:{stress:9},  res:"Un trimestre al freddo."}]},
+];
+
+/* ================= STATE ================= */
+let G = null;
+
+function newGame(name, offer){
+  const c = offer.company;
+  G = {
+    name, avatar:"🧑‍💼", month:1,
+    stats:{sel:8, for:5, org:6, amm:5, con:2, sin:2, lea:4, rel:6},
+    rep:5, stress:8, bank:1500,
+    salary:offer.salary, level:0, tier:c.tier, company:c,
+    ap:3, usedActs:[], log:[], monthsHere:0, blocked:false,
+    objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0,
+  };
+  pushLog(`Entri in ${companyLogo(c,14)} <b>${c.n}</b> come <b>${LEVELS[0].t}</b>. Che avventura cominci!`);
+  makeObjective();
+}
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const avg = s => Math.round(STATS.reduce((t,st)=>t+s[st.k],0)/STATS.length);
+const reqEntries = nx => nx ? Object.keys(nx).map(k=>({k, v:nx[k]})) : [];
+function eur(n){ return n.toLocaleString('it-IT')+'€'; }
+const scaledReq = base => base + G.level*3;               // challenge thresholds grow with seniority
+function makeCompany(tier){ return {...pick(COMPANIES[tier]), tier, ...TIERS[tier]}; }
+function roleSalary(tier, level){ return Math.round((22000 + level*9000) * TIERS[tier].salMul / 500)*500; }
+
+/* ================= INTRO / OFFERS ================= */
+$("introBadge").innerHTML=icon('avatar',58,'introico');
+$("introLbBtn").onclick=()=>showLeaderboard();
+$("startBtn").onclick = () => {
+  window._name = $("nameInput").value.trim() || "Alex";
+  buildStartOffers(); show("s-offers");
+};
+$("nameInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("startBtn").click(); });
+
+function buildStartOffers(){
+  const wrap=$("startOffers"); wrap.innerHTML="";
+  const flavors=[
+    {role:"HR Assistant",      perk:"🌱 Impari tutto da zero. Crescita rapida, stipendio basso.", sal:20000},
+    {role:"Junior Recruiter",  perk:"🎯 Focus selezione. Ottimo per partire sulle competenze Soft.", sal:22000},
+    {role:"People Ops Trainee",perk:"🗂️ Startup dinamica, tanti processi da mettere in ordine.", sal:21000},
+  ];
+  const pool=[...COMPANIES[0]];
+  flavors.forEach(f=>{
+    const cbase=pool.splice(rnd(pool.length),1)[0];
+    const company={...cbase, tier:0, ...TIERS[0]};
+    const offer={company, salary:f.sal};
+    const el=document.createElement("button"); el.className="card offer";
+    el.innerHTML=`<div class="logo">${companyLogo(company,44)}</div><div class="co">${company.n}</div>
+      <div class="tierlbl">${TIERS[0].label} · ${TIERS[0].size}</div>
+      <div class="role">${f.role}</div>
+      <div class="sal">${(f.sal/1000)}k <small>/ anno</small></div>
+      <div class="perk">${f.perk}</div>`;
+    el.onclick=()=>{ newGame(window._name, offer); startGame(); };
+    wrap.appendChild(el);
+  });
+}
+
+/* ================= GAME START / RENDER ================= */
+function startGame(){ initStaticIcons(); buildStatSkeleton(); buildActions(); show("s-game"); render(); }
+
+function initStaticIcons(){
+  $("icMoney").innerHTML=icon('stipendio',18);
+  $("icRep").innerHTML=icon('reputazione',18);
+  $("icBank").innerHTML=icon('risparmi',18);
+  $("secIcon").innerHTML=icon('calendar',16);
+  $("pathBtn").innerHTML=`${icon('ladder',14)} Percorso di carriera`;
+}
+
+function buildStatSkeleton(){
+  const list=$("statList"); list.innerHTML="";
+  ["soft","hard","man"].forEach(cat=>{
+    const g=document.createElement("div"); g.className="catgroup";
+    g.innerHTML=`<div class="cathead" style="color:${CATS[cat].col}"><i style="background:${CATS[cat].col}"></i>${CATS[cat].name}</div>`;
+    STATS.filter(s=>s.cat===cat).forEach(s=>{
+      const row=document.createElement("div"); row.className="stat";
+      row.innerHTML=`<div class="ic" style="color:${CATS[cat].col}">${icon(s.ic,18)}</div><div class="nm">${s.name}</div>
+        <div class="bar"><span id="bar-${s.k}" style="width:0%;background:${CATS[cat].col}"></span></div>
+        <div class="val" id="val-${s.k}">0</div>`;
+      g.appendChild(row);
+    });
+    list.appendChild(g);
+  });
+}
+
+function fxTags(eff){
+  let out="";
+  STATS.forEach(s=>{ if(eff[s.k]) out+=`<span class="tag up">${icon(s.ic,12)}+${eff[s.k]}</span>`; });
+  if(eff.rep) out+=`<span class="tag rep">${icon('reputazione',12)}${eff.rep>0?'+':''}${eff.rep}</span>`;
+  if(eff.stress) out+=`<span class="tag ${eff.stress>0?'str':'down'}">${icon('stress',12)}${eff.stress>0?'+':''}${eff.stress}</span>`;
+  if(eff.cost) out+=`<span class="tag mon">${icon('stipendio',12)}-${eff.cost}</span>`;
+  return out;
+}
+
+function buildActions(){
+  const list=$("actList"); list.innerHTML="";
+  ACTIONS.forEach(a=>{
+    const b=document.createElement("button"); b.className="act"; b.id="act-"+a.id;
+    const dot = a.cat!=="none" ? `<span class="catdot" style="background:${CATS[a.cat].col}"></span>` : "";
+    const icCol = a.cat!=="none" ? CATS[a.cat].col : "var(--dim)";
+    const pips = "●".repeat(a.ap||1);
+    const reqTag = a.req ? `<div class="reqtag" id="req-${a.id}"></div>` : "";
+    b.innerHTML=`${dot}<div class="ic" style="color:${icCol}">${icon(a.ic,24)}</div><div class="t">${a.t}</div>
+      <div class="d">${a.d}</div>${reqTag}<div class="fx"><span class="tag ap">${pips} ${a.ap||1} PA</span>${fxTags(a.eff)}${a.cost?`<span class="tag mon" id="cost-${a.id}"></span>`:""}</div>`;
+    b.onclick=()=>doAction(a);
+    list.appendChild(b);
+  });
+}
+
+function render(){
+  const s=G.stats;
+  $("hName").textContent=G.name; $("avatar").innerHTML=icon('avatar',30);
+  $("hRole").textContent=LEVELS[G.level].t;
+  $("hCo").innerHTML=`${companyLogo(G.company,15)} ${G.company.n} · ${TIERS[G.tier].label}`;
+  $("hMonth").textContent="Trim. "+((G.month-1)%4+1)+"/4";
+  $("hYear").textContent="Anno "+(Math.floor((G.month-1)/4)+1);
+  $("mNum").textContent=(G.month-1)%4+1;
+  $("cMoney").textContent=(G.salary/1000)+"k";
+  $("cRep").textContent=Math.round(G.rep);
+  $("cBank").textContent=Math.round(G.bank).toLocaleString('it-IT')+"€";
+  STATS.forEach(st=>{ $("bar-"+st.k).style.width=clamp(s[st.k],0,100)+"%"; $("val-"+st.k).textContent=Math.round(s[st.k]); });
+  const dots=$("apDots"); dots.innerHTML="";
+  for(let i=0;i<3;i++){const d=document.createElement("div");d.className="dot"+(i<G.ap?" on":"");dots.appendChild(d);}
+  ACTIONS.forEach(a=>{
+    const el=$("act-"+a.id);
+    const cost=a.ap||1;
+    const spent=G.usedActs.includes(a.id);
+    const locked=actionLocked(a);
+    const noAp=cost>G.ap && !spent;
+    const money=actionCost(a);
+    const noMoney=money && G.bank<money;
+    el.className="act"+(spent?" spent":"")+((noAp||locked||noMoney)?" noap":"");
+    el.disabled = spent || noAp || noMoney || locked;
+    if(a.cost){ const ct=$("cost-"+a.id); if(ct) ct.innerHTML=`${icon('stipendio',12)}${money.toLocaleString('it-IT')}€`; }
+    const rt=$("req-"+a.id);
+    if(rt){
+      if(locked) rt.className="reqtag", rt.innerHTML=`🔒 richiede ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${a.req.v} · hai ${Math.round(G.stats[a.req.k])}`;
+      else rt.className="reqtag met", rt.innerHTML=`✓ ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${a.req.v}`;
+    }
+  });
+  $("endBtn").textContent = G.ap>0 ? `Chiudi il trimestre e affronta la sfida →` : `Affronta la sfida di fine trimestre →`;
+  renderStress(); renderLifestyle(); renderPromo(); renderObjective(); renderFeed();
+}
+
+function renderLifestyle(){
+  const life=LIFESTYLES[G.lifestyle];
+  $("lifeIc").innerHTML=icon(life.ic,26);
+  $("lifeName").textContent=life.name;
+  const fat = life.poor ? lifeFatigue(G.poorStreak+1) : 0;                       // scatterà a fine trimestre
+  const habit = life.habituates ? comfortHabit(G.comfortStreak+1, -life.stressQ) : 0;
+  const eff = life.stressQ + habit;                                             // stress passivo effettivo
+  const ss = eff>0?`+${eff}`:`${eff}`;
+  const rs = life.repQ>0?`+${life.repQ}`:`${life.repQ}`;
+  let fx=`spese ×${life.costMul} · ${icon('stress',11)}${ss} · ${icon('reputazione',11)}${rs} /trim`;
+  if(fat>0) fx+=` · <span style="color:var(--red);font-weight:800">logoramento +${fat}${icon('stress',11)}</span>`;
+  if(habit>0) fx+=` · <span style="color:var(--orange);font-weight:800">comfort ${eff===0?'esaurito':'in calo'}</span>`;
+  $("lifeFx").innerHTML=fx;
+}
+
+function renderStress(){
+  const s=Math.round(G.stress);
+  $("sbVal").textContent=s+" / 100";
+  const fill=$("sbFill"); fill.style.width=s+"%";
+  const lvl = s>=90?"crit":s>=75?"high":s>=60?"mid":s>=40?"warn":"ok";
+  fill.className="sbfill "+lvl;
+  $("stressCard").classList.toggle("crit", s>=90);
+  $("sbIc").innerHTML = `${icon('stress',15)} Stress`;
+  const malus=Math.round((1-stressMult())*100);
+  const extra=Math.round((G.salary/4)*Math.min(s,100)/400);   // spese extra/trim per lo stress
+  const note=$("sbNote");
+  if(s>=90) note.innerHTML=`⚠️ Rischio burnout! A 100 la partita finisce · malus −${malus}% · +${extra.toLocaleString('it-IT')}€ spese/trim`;
+  else if(malus>0) note.innerHTML=`malus competenze −${malus}% · +${extra.toLocaleString('it-IT')}€ di spese extra/trim`;
+  else note.innerHTML=`nessun malus · solo +${extra.toLocaleString('it-IT')}€ di spese/trim`;
+  note.className="sbnote"+(s>=75?" danger":"");
+}
+
+function renderPromo(){
+  const nx=LEVELS[G.level].next;
+  if(!nx){ $("pNext").textContent="Sei al vertice"; $("pBar").style.width="100%"; $("pHint").textContent=""; return; }
+  $("pNext").textContent="→ "+LEVELS[G.level+1].t;
+  const reqs=reqEntries(nx);
+  let ratios=[], missing=[];
+  reqs.forEach(r=>{ ratios.push(clamp(G.stats[r.k]/r.v,0,1));
+    if(G.stats[r.k]<r.v) missing.push(`${icon(STAT(r.k).ic,12)} ${Math.round(G.stats[r.k])}/${r.v}`); });
+  $("pBar").style.width=Math.round(ratios.reduce((a,b)=>a+b,0)/ratios.length*100)+"%";
+  const capped=(G.level+1)>TIERS[G.tier].maxLevel;
+  const minQ=LEVELS[G.level].minQ||8;
+  const timeOk=G.monthsHere>=minQ;
+  if(missing.length) $("pHint").innerHTML=`Ti manca: <b>${missing.join(" · ")}</b>`;
+  else if(!timeOk) $("pHint").innerHTML=`✅ Competenze pronte! Ti serve ancora esperienza nel ruolo: <b>${G.monthsHere}/${minQ} trimestri</b>.`;
+  else if(capped) $("pHint").innerHTML=`✅ Sei pronto! Ma <b>${G.company.n}</b> è troppo piccola per questo ruolo: aspetta un'offerta da un'azienda più grande.`;
+  else $("pHint").innerHTML=`✅ Pronto per la promozione! Arriverà a fine trimestre.`;
+}
+
+function renderFeed(){
+  const f=$("feed"); f.innerHTML="";
+  G.log.slice(-6).reverse().forEach(l=>{ const d=document.createElement("div"); d.className="logline"; d.innerHTML=l; f.appendChild(d); });
+}
+function pushLog(html){ G.log.push(html); }
+
+/* ================= ACTIONS ================= */
+// Higher stress → bigger malus on competence gains. 100 = burnout (game over).
+function stressMult(){ const s=G.stress; if(s>=90)return .5; if(s>=75)return .65; if(s>=60)return .8; if(s>=40)return .9; return 1; }
+function actionLocked(a){ return a.req && G.stats[a.req.k] < a.req.v; }
+// Vacation and other scaling costs grow with lifestyle (tenore di vita).
+function actionCost(a){ if(!a.cost) return 0; return a.costScales ? Math.round(a.cost*LIFESTYLES[G.lifestyle].costMul/50)*50 : a.cost; }
+
+function doAction(a){
+  const cost=a.ap||1;
+  if(cost>G.ap || G.usedActs.includes(a.id) || actionLocked(a)) return;
+  const money=actionCost(a);
+  if(money){ if(G.bank<money) return; G.bank-=money; }
+  applyEff(a.eff, stressMult());
+  G.usedActs.push(a.id); G.ap-=cost;
+  if(G.stress>=100){ loseGame(); return; }
+  render();
+}
+function applyEff(eff, mult=1){
+  STATS.forEach(s=>{ if(eff[s.k]) G.stats[s.k]=clamp(G.stats[s.k]+(eff[s.k]>0?Math.round(eff[s.k]*mult):eff[s.k]),0,100); });
+  if(eff.rep) G.rep=clamp(G.rep+eff.rep,0,100);
+  if(eff.stress) G.stress=clamp(G.stress+eff.stress,0,100);
+  if(eff.bank) G.bank=Math.max(0, G.bank+eff.bank);
+}
+
+/* ================= MONTHLY OBJECTIVE ================= */
+function makeObjective(){
+  const nx=LEVELS[G.level].next;
+  const r=Math.random();
+  // 1) Push a competence needed for the next promotion (gives direction)
+  if(nx && r<0.5){
+    const gaps=reqEntries(nx).filter(e=>G.stats[e.k]<e.v).sort((a,b)=>(b.v-G.stats[b.k])-(a.v-G.stats[a.k]));
+    if(gaps.length){
+      const g=gaps[0];
+      const target=Math.min(g.v, Math.round(G.stats[g.k])+ (6+rnd(4)));
+      G.objective={type:"reachStat", k:g.k, target, text:`Porta <b>${STAT(g.k).name}</b> a ≥ ${target}`, ic:STAT(g.k).ic};
+      return;
+    }
+  }
+  // 2) Beat the challenge without the fallback
+  if(r<0.7){
+    G.objective={type:"beatChallenge", text:`Supera la sfida con una <b>mossa da esperto</b> (niente opzione base)`, ic:"trophy"};
+    return;
+  }
+  // 3) Do N activities of a category
+  if(r<0.88){
+    const cat=pick(["soft","hard","man"]);
+    G.objective={type:"catCount", cat, n:2, text:`Svolgi almeno <b>2 attività ${CATS[cat].name}</b>`, ic:"puzzle"};
+    return;
+  }
+  // 4) Keep stress under control
+  G.objective={type:"lowStress", target:45, text:`Chiudi il trimestre con <b>stress ≤ 45</b>`, ic:"stress"};
+}
+
+function objState(){
+  const o=G.objective; if(!o) return {done:false, prog:""};
+  if(o.type==="reachStat"){ const c=Math.round(G.stats[o.k]); return {done:c>=o.target, prog:`${c} / ${o.target}`}; }
+  if(o.type==="lowStress"){ const c=Math.round(G.stress); return {done:c<=o.target, prog:`stress attuale ${c} · obiettivo ≤ ${o.target}`}; }
+  if(o.type==="catCount"){ const c=G.usedActs.filter(id=>ACTIONS.find(a=>a.id===id).cat===o.cat).length; return {done:c>=o.n, prog:`${c} / ${o.n} questo trimestre`}; }
+  if(o.type==="beatChallenge"){ const d=G.lastChallengeGood===true; return {done:d, prog: G.lastChallengeGood===null?"da giocare a fine trimestre":(d?"riuscito!":"hai usato l'opzione base")}; }
+  return {done:false, prog:""};
+}
+
+function renderObjective(){
+  const o=G.objective; if(!o) return;
+  const st=objState();
+  $("objIc").innerHTML=icon(o.ic,22);
+  $("objG").innerHTML=o.text;
+  $("objP").innerHTML=(st.done?"✅ ":"")+st.prog;
+  $("objRew").innerHTML=`ricompensa<br><b>${icon('reputazione',12)}+${OBJ_REWARD.rep} · ${icon('stipendio',12)}+${OBJ_REWARD.bank}€</b>`;
+  $("objCard").classList.toggle("done", st.done);
+}
+
+function evaluateObjective(){
+  const st=objState();
+  if(st.done){
+    G.rep=clamp(G.rep+OBJ_REWARD.rep,0,100); G.bank+=OBJ_REWARD.bank;
+    pushLog(`<span class="gold">🎯 Obiettivo del trimestre centrato!</span> +⭐${OBJ_REWARD.rep} reputazione, +${OBJ_REWARD.bank}€.`);
+    toast("🎯 Obiettivo centrato!","good");
+  } else {
+    pushLog(`Obiettivo del trimestre mancato. Al prossimo!`);
+  }
+}
+
+/* ================= END OF MONTH ================= */
+$("endBtn").onclick = endMonth;
+
+function rollImprevisto(){
+  if(Math.random()>0.45) return null;
+  const im=pick(IMPREVISTI);
+  const amt=Math.round((im.min + Math.random()*(im.max-im.min)) * (1+G.tier*0.35) / 10) * 10;
+  return {...im, amt};
+}
+// Logoramento & abitudine sono gestiti sull'ANNO (4 trimestri), non sul trimestre.
+// streak = trimestri consecutivi con quello stile → anni = floor(streak/4). 1 anno di grazia.
+function lifeFatigue(streak){ const y=Math.floor(streak/4); return Math.min(8, Math.max(0, y-1)*2); }       // +2 stress/anno, cap +8
+function comfortHabit(streak, relief){ const y=Math.floor(streak/4); return Math.min(relief, Math.max(0, y-1)); } // il bonus cala di 1/anno
+
+function endMonth(){
+  // Order matters: the surprise hits BEFORE payday — la affronti con la cassa che hai ora.
+  resolveImprevisto(rollImprevisto(), ()=>{
+    settleQuarterFinances();
+    if(G.stress>=100){ loseGame(); return; }
+    showChallenge(pick(CHALLENGES));
+  });
+}
+
+function settleQuarterFinances(){
+  // Stipendio ANNUALE → 25% a trimestre. Spese ~50% dell'income × stile + sovrapprezzo stress.
+  const income=Math.round(G.salary/4);
+  const life=LIFESTYLES[G.lifestyle];
+  const stressExtra=Math.round(income*Math.min(G.stress,100)/400);
+  const expenses=Math.round(income*0.5*life.costMul)+stressExtra;
+  const net=income-expenses;
+  G.bank+=net;
+
+  // Lifestyle: reputation, passive stress, and fatigue if a poor lifestyle is held too long.
+  G.rep=clamp(G.rep+life.repQ,0,100);
+  G.poorStreak = life.poor ? G.poorStreak+1 : 0;
+  G.comfortStreak = life.habituates ? G.comfortStreak+1 : 0;
+  const fatigue = life.poor ? lifeFatigue(G.poorStreak) : 0;
+  const habit = life.habituates ? comfortHabit(G.comfortStreak, -life.stressQ) : 0;
+  const effStressQ = life.stressQ + habit;   // comfort relief fades toward 0 with habituation
+  G.stress=clamp(G.stress-5+effStressQ+fatigue,0,100);
+  if(fatigue>0) pushLog(`😖 Lo stile <b>${life.name}</b> ti logora da anni: <span class="bad">+${fatigue} stress</span>.`);
+  if(habit>0) pushLog(`😪 Ti sei abituato al comfort: il sollievo scende a <b>${effStressQ>0?'+':''}${effStressQ}</b> stress/trim.`);
+  if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
+    pushLog(`<span class="bad">💸 Non arrivi a fine trimestre!</span> I conti in rosso ti stressano (+3).`); }
+  pushLog(`💰 Trimestre: <b>${net>=0?'+':''}${eur(net)}</b> · stipendio ${eur(income)} − spese ${eur(expenses)} (${eur(stressExtra)} stress · stile ${life.name}).`);
+}
+
+function resolveImprevisto(im, done){
+  if(!im){ done(); return; }
+  if(im.mkChoices){ showImprevistoChoice(im, done); return; }
+  if(im.gain){
+    G.bank+=im.amt;
+    pushLog(`<span class="good">${icon(im.sv,13)} ${im.t}:</span> +${eur(im.amt)}.`);
+    toast(`${icon(im.sv,14)} +${eur(im.amt)} · ${im.t}`,"good");
+  } else {
+    G.bank-=im.amt;
+    if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
+      pushLog(`<span class="bad">${icon(im.sv,13)} ${im.t}:</span> −${eur(im.amt)}, ma non ce la fai: +3 stress.`); }
+    else pushLog(`<span class="bad">${icon(im.sv,13)} ${im.t}:</span> −${eur(im.amt)}.`);
+    toast(`${icon(im.sv,14)} −${eur(im.amt)} · ${im.t}`,"bad");
+  }
+  if(G.stress>=100){ loseGame(); return; }
+  done();
+}
+
+function showImprevistoChoice(im, done){
+  const m=$("modal");
+  const opts=im.mkChoices(im.amt);
+  m.innerHTML=`<div class="em" style="color:var(--orange)">${icon(im.sv,46)}</div><h2>${im.t}</h2>
+    <div class="tagline">Imprevisto · ${eur(im.amt)}</div>
+    <p class="body">Un imprevisto bussa alla porta. Come lo gestisci?</p>
+    <div class="cashline">${icon('risparmi',13)} Risparmi disponibili: <b>${eur(Math.round(G.bank))}</b> <span class="cashsub">(lo stipendio arriva dopo)</span></div>
+    <div class="choices" id="impBox"></div>`;
+  const box=m.querySelector("#impBox");
+  opts.forEach(o=>{
+    const cost = o.eff.bank ? -o.eff.bank : 0;
+    const canAfford = cost<=0 || G.bank>=cost;
+    const b=document.createElement("button"); b.className="choice"; b.disabled=!canAfford;
+    b.innerHTML=`<div class="ct">${o.ct}</div><div class="cd">${o.cd}</div>`
+      + (!canAfford?`<div class="rq lock">🔒 non puoi permettertelo</div>`:"");
+    if(canAfford) b.onclick=()=>{
+      applyEff(o.eff);
+      pushLog(`${icon(im.sv,13)} <b>${im.t}</b> — ${o.res}`);
+      hideOverlay();
+      if(G.stress>=100){ loseGame(); return; }
+      done();
+    };
+    box.appendChild(b);
+  });
+  showOverlay();
+}
+
+function showChallenge(ch){
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon(ch.sv,48)}</div><h2>${ch.h}</h2>
+    <div class="tagline">Sfida · ${ch.tag}</div>
+    <p class="body">${ch.body}</p><div class="choices" id="chBox"></div>`;
+  const box=m.querySelector("#chBox");
+  ch.opts.forEach(o=>{
+    const fallback=!o.req;
+    const need = o.req ? scaledReq(o.req.v) : 0;
+    const ok = fallback || G.stats[o.req.k] >= need;
+    const b=document.createElement("button"); b.className="choice"; b.disabled=!ok;
+    let rq="";
+    if(o.req) rq=`<div class="rq ${ok?'ok':'lock'}">${ok?'✓':'🔒'} richiede ${icon(STAT(o.req.k).ic,12)} ${STAT(o.req.k).name} ${need} · hai ${Math.round(G.stats[o.req.k])}</div>`;
+    else rq=`<div class="rq" style="color:var(--dim2)">opzione base · sempre disponibile</div>`;
+    b.innerHTML=`<div class="ct">${o.ct}</div>${rq}<div class="fx">${fxTags(o.eff)}</div>`;
+    if(ok) b.onclick=()=>resolveChallenge(ch,o,fallback);
+    box.appendChild(b);
+  });
+  showOverlay();
+}
+
+function resolveChallenge(ch, o, fallback){
+  applyEff(o.eff);
+  G.lastChallengeGood = !fallback;
+  const cls = fallback ? "bad" : "good";
+  pushLog(`${icon(ch.sv,13)} <b>${ch.h}</b> — <span class="${cls}">${o.res}</span>`);
+  hideOverlay();
+  if(G.stress>=100){ loseGame(); return; }
+  afterChallenge();
+}
+
+function afterChallenge(){
+  G.month++; G.monthsHere++; G.ap=3; G.usedActs=[];
+  if(G.stress>=95) pushLog(`<span class="bad">🥵 Sei al limite del burnout.</span> Le prestazioni ne risentono: pensa a staccare.`);
+  evaluateObjective();
+  const promoted=tryPromotion();
+  if(!promoted) maybeOffer();
+  G.lastChallengeGood=null;
+  makeObjective();
+  render();
+}
+
+/* ================= PROMOTION ================= */
+function meetsReq(nx){ if(!nx) return false; return reqEntries(nx).every(r=>G.stats[r.k]>=r.v); }
+
+function tryPromotion(){
+  const nx=LEVELS[G.level].next;
+  if(!nx) return false;
+  const ready = meetsReq(nx) && G.monthsHere >= (LEVELS[G.level].minQ||8);   // competences + ~2 years in role
+  if(!ready){ G.blocked=false; return false; }
+  const target=G.level+1;
+  if(target>TIERS[G.tier].maxLevel){ G.blocked=true; return false; }
+  G.level=target; G.monthsHere=0; G.blocked=false;
+  G.salary=Math.max(G.salary, roleSalary(G.tier,G.level));
+  if(G.level>=LEVELS.length-1){ winGame(); return true; }
+  celebrate(`🎉 Promozione!`, `Ora sei <b>${LEVELS[G.level].t}</b> in ${G.company.n}. Stipendio: ${(G.salary/1000)}k/anno.`);
+  pushLog(`<span class="gold">🎉 Promosso a ${LEVELS[G.level].t}!</span> Nuovo stipendio ${(G.salary/1000)}k.`);
+  return true;
+}
+
+/* ================= JOB OFFERS ================= */
+function maybeOffer(){
+  const nx=LEVELS[G.level].next, target=G.level+1;
+  let chance=0, forNext=false;
+  if(G.blocked && nx){ chance=0.85; forNext=true; }
+  else if(G.rep>35 && G.monthsHere>=3){ chance=0.18; }
+  if(Math.random()>chance) return;
+
+  let offers=[];
+  if(forNext){
+    for(let t=G.tier+1;t<TIERS.length;t++){
+      if(TIERS[t].maxLevel>=target){ offers.push(buildOffer(t,target)); if(offers.length>=2) break; }
+    }
+  } else {
+    const t=Math.min(TIERS.length-1, G.tier+(Math.random()<0.5?0:1));
+    offers.push(buildOffer(t,G.level));
+  }
+  offers=offers.filter(Boolean).slice(0,3);
+  if(offers.length) showOfferModal(offers, forNext);
+}
+function buildOffer(tier, level){
+  const company=makeCompany(tier);
+  let sal=Math.round(roleSalary(tier,level)*(1+Math.random()*0.12)/500)*500;
+  return {company, level, salary:sal};
+}
+function showOfferModal(offers, forNext){
+  const m=$("modal");
+  const sub = forNext
+    ? `La tua azienda non può promuoverti oltre. Ma qualcuno di più grande ti vuole come <b>${LEVELS[offers[0].level].t}</b>.`
+    : `Un'azienda ti propone un salto di stipendio nello stesso ruolo.`;
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon('offer',46)}</div><h2>${forNext?"Un'offerta per crescere!":"Ti hanno cercato"}</h2>
+    <p class="body">${sub}</p><div class="choices" id="offBox"></div>`;
+  const box=m.querySelector("#offBox");
+  offers.forEach(o=>{
+    const up=o.salary>G.salary;
+    const b=document.createElement("button"); b.className="choice";
+    b.innerHTML=`<div class="ct">${companyLogo(o.company,16)} ${o.company.n} — ${LEVELS[o.level].t}</div>
+      <div class="cd">${TIERS[o.company.tier].label} · ${TIERS[o.company.tier].size}</div>
+      <div class="fx" style="margin-top:6px">
+        <span class="tag rep">${icon('stipendio',12)} ${(o.salary/1000)}k/anno ${up?'<span style="color:var(--green)">▲</span>':''}</span>
+        <span class="tag str">${icon('stress',12)} ambiente più intenso</span></div>`;
+    b.onclick=()=>acceptOffer(o); box.appendChild(b);
+  });
+  const stay=document.createElement("button"); stay.className="choice"; stay.style.borderColor="var(--line)";
+  stay.innerHTML=`<div class="ct">🪑 Resta in ${G.company.n}</div>
+     <div class="cd">${forNext?"Rinunci alla crescita per ora (un po' di frustrazione).":"Nessun cambiamento."}</div>`;
+  stay.onclick=()=>{
+    if(forNext){ G.stress=clamp(G.stress+4,0,100); pushLog(`Hai rifiutato l'offerta e sei rimasto in ${G.company.n}. Un po' di frustrazione (+stress).`); }
+    else pushLog(`Hai declinato l'offerta esterna.`);
+    hideOverlay(); if(G.stress>=100){ loseGame(); return; } render();
+  };
+  box.appendChild(stay); showOverlay();
+}
+function acceptOffer(o){
+  const oldCo=G.company.n;
+  G.company=o.company; G.tier=o.company.tier; G.level=o.level; G.salary=o.salary;
+  G.monthsHere=0; G.blocked=false;
+  G.stress=clamp(G.stress+10,0,100); G.rep=clamp(G.rep-3,0,100);
+  hideOverlay();
+  if(G.stress>=100){ loseGame(); return; }
+  if(G.level>=LEVELS.length-1){ winGame(); return; }
+  celebrate(`✍️ Nuovo capitolo!`, `Lasci ${oldCo} ed entri in ${companyLogo(o.company,15)} <b>${o.company.n}</b> come <b>${LEVELS[o.level].t}</b>.`);
+  pushLog(`<span class="gold">✍️ Cambio azienda:</span> da ${oldCo} a <b>${o.company.n}</b> come ${LEVELS[o.level].t} (${(o.salary/1000)}k).`);
+  makeObjective(); render();
+}
+
+/* ================= CELEBRATION / TOAST ================= */
+function celebrate(title, body){
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--gold)">${icon('spark',48)}</div><h2>${title}</h2><p class="body">${body}</p>
+    <button class="btn block" id="okCel">Continua →</button>`;
+  m.querySelector("#okCel").onclick=()=>{ hideOverlay(); render(); };
+  showOverlay();
+}
+let toastT=null;
+function toast(msg,kind){ if(!msg)return; const t=$("toast"); t.innerHTML=msg;
+  t.className="toast show"+(kind?(" "+kind):""); clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ================= WIN ================= */
+/* ================= LEADERBOARD ================= */
+// Built-in benchmark champions to compete against (local play). A real cross-user
+// leaderboard would replace lbLoad/lbAdd with Supabase calls — same entry shape.
+const RIVALS = [
+  {name:"Giulia F.",  years:8.4,  comp:84, rep:92, bank:168000},
+  {name:"Davide P.",  years:9.8,  comp:86, rep:79, bank:190000},
+  {name:"Marco B.",   years:9.1,  comp:89, rep:80, bank:240000},
+  {name:"Sara C.",    years:10.2, comp:78, rep:88, bank:132000},
+  {name:"Luca T.",    years:11.5, comp:82, rep:74, bank:96000},
+  {name:"Elena M.",   years:12.8, comp:71, rep:83, bank:78000},
+  {name:"Chiara N.",  years:13.5, comp:68, rep:90, bank:60000},
+  {name:"Roberto G.", years:15.2, comp:74, rep:66, bank:45000},
+];
+// Composite score: speed matters most, then competence, reputation, savings.
+function lbScore(e){
+  const speed = Math.max(0, 22 - e.years) * 220;
+  const comp  = e.comp * 26;
+  const rep   = e.rep * 16;
+  const money = Math.min(e.bank/180, 900);
+  return Math.round(speed + comp + rep + money);
+}
+function lbLoad(){ try{ return JSON.parse(localStorage.getItem('hrq_lb')||'[]'); }catch(e){ return []; } }
+function lbSave(a){ try{ localStorage.setItem('hrq_lb', JSON.stringify(a)); }catch(e){} }
+function lbAdd(entry){ const a=lbLoad(); a.push(entry); a.sort((x,y)=>lbScore(y)-lbScore(x)); lbSave(a.slice(0,60)); }
+function lbCombined(){ return [...RIVALS, ...lbLoad()].map(e=>({...e, score:lbScore(e)})).sort((a,b)=>b.score-a.score); }
+function fmtScore(s){ return s>=1000 ? (s/1000).toFixed(1)+'k' : ''+s; }
+
+function showLeaderboard(highlightTs){
+  const list=lbCombined();
+  const rows=list.map((e,i)=>{
+    const medal = i<3 ? `<span class="lbmedal m${i+1}">${i+1}</span>` : `<span class="lbmedal">${i+1}</span>`;
+    const mine = !!e.ts;
+    const you = mine && e.ts===highlightTs;
+    return `<div class="lbrow${you?' you':''}">
+      ${medal}
+      <div class="lbmain"><div class="lbname">${e.name}${mine?` <span class="lbtag">${you?'tu · nuovo':'tu'}</span>`:''}</div>
+        <div class="lbstats">
+          <span>${icon('clock',11)} ${e.years.toFixed(1)}a</span>
+          <span>${icon('formazione',11)} ${Math.round(e.comp)}</span>
+          <span>${icon('reputazione',11)} ${Math.round(e.rep)}</span>
+          <span>${icon('risparmi',11)} ${Math.round(e.bank/1000)}k</span>
+        </div></div>
+      <div class="lbscore">${fmtScore(e.score)}<small>pt</small></div>
+    </div>`;
+  }).join("");
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--gold)">${icon('trophy',44)}</div>
+    <h2>Classifica</h2><div class="tagline">i migliori HR Director</div>
+    <div class="lblist">${rows}</div>
+    <button class="btn block" id="lbClose">Chiudi</button>`;
+  m.querySelector("#lbClose").onclick=hideOverlay;
+  showOverlay();
+}
+
+function winGame(){
+  hideOverlay();
+  const years=G.month/4, compAvg=avg(G.stats);
+  const entry={name:G.name||"Tu", years:+years.toFixed(2), comp:compAvg, rep:Math.round(G.rep), bank:Math.round(G.bank), ts:Date.now()};
+  lbAdd(entry);
+  const rank=lbCombined().findIndex(e=>e.ts===entry.ts)+1;
+  let grade="B", note="Traguardo pienamente meritato.";
+  if(years<=12){grade="S";note="Ascesa fulminante. Un talento generazionale delle HR.";}
+  else if(years<=15){grade="A";note="Percorso brillante e solido.";}
+  else if(years<=19){grade="B";note="Traguardo pienamente meritato.";}
+  else {grade="C";note="Ci è voluto tempo, ma ce l'hai fatta.";}
+  const card=$("endCard");
+  card.innerHTML=`<div class="em" style="color:var(--gold)">${icon('trophy',60)}</div><div class="grade">RANK ${grade}</div>
+    <h1>Sei HR Director!</h1>
+    <p class="muted" style="max-width:440px;margin:6px auto 0;line-height:1.5">
+      ${G.name}, hai raggiunto il vertice in ${companyLogo(G.company,15)} <b>${G.company.n}</b>. ${note}</p>
+    <div class="recap">
+      <div class="b"><div class="k">⏱️ Durata</div><div class="v">${years.toFixed(1)} anni</div></div>
+      <div class="b"><div class="k">💰 Stipendio</div><div class="v">${(G.salary/1000)}k/anno</div></div>
+      <div class="b"><div class="k">🏦 Risparmi</div><div class="v">${Math.round(G.bank).toLocaleString('it-IT')}€</div></div>
+      <div class="b"><div class="k">📊 Competenza media</div><div class="v">${compAvg}/100</div></div>
+      <div class="b"><div class="k">⭐ Reputazione</div><div class="v">${Math.round(G.rep)}</div></div>
+      <div class="b"><div class="k">🏢 Aziende</div><div class="v">Tier ${G.tier+1}/4</div></div>
+    </div>
+    <div class="lbbanner">${icon('trophy',18)} Sei <b>#${rank}</b> in classifica · <b>${fmtScore(lbScore(entry))} pt</b></div>
+    <button class="btn block" id="lbView" style="margin-bottom:10px">${icon('trophy',15)} Vedi la classifica</button>
+    <button class="btn block ghost" id="againBtn">🔁 Gioca ancora</button>`;
+  card.querySelector("#lbView").onclick=()=>showLeaderboard(entry.ts);
+  card.querySelector("#againBtn").onclick=()=>location.reload();
+  show("s-end");
+}
+
+/* ================= LOSE (BURNOUT) ================= */
+function loseGame(){
+  hideOverlay();
+  const years=(G.month/4).toFixed(1), compAvg=avg(G.stats);
+  const card=$("endCard");
+  card.innerHTML=`<div class="em" style="color:var(--red)">${icon('stress',60)}</div>
+    <div class="grade" style="-webkit-text-fill-color:transparent;background:linear-gradient(90deg,var(--red),var(--orange));-webkit-background-clip:text;background-clip:text">BURNOUT</div>
+    <h1>Game Over</h1>
+    <p class="muted" style="max-width:440px;margin:6px auto 0;line-height:1.5">
+      ${G.name}, lo stress ha toccato 100 e ti sei bruciato come <b>${LEVELS[G.level].t}</b> in ${G.company.n}.
+      La prossima volta alterna il <b>🌴 riposo</b> alle attività pesanti e non superare i 90.</p>
+    <div class="recap">
+      <div class="b"><div class="k">⏱️ Carriera</div><div class="v">${years} anni</div></div>
+      <div class="b"><div class="k">🎖️ Ruolo raggiunto</div><div class="v" style="font-size:14px">${LEVELS[G.level].t}</div></div>
+      <div class="b"><div class="k">📊 Competenza media</div><div class="v">${compAvg}/100</div></div>
+      <div class="b"><div class="k">⭐ Reputazione</div><div class="v">${Math.round(G.rep)}</div></div>
+    </div>
+    <button class="btn block" id="lbViewLose" style="margin-bottom:10px">${icon('trophy',15)} Vedi la classifica</button>
+    <button class="btn block ghost" id="retryBtn">🔁 Riprova</button>`;
+  card.querySelector("#lbViewLose").onclick=()=>showLeaderboard();
+  card.querySelector("#retryBtn").onclick=()=>location.reload();
+  show("s-end");
+}
+
+/* ================= CAREER PATH (alberatura ruoli) ================= */
+function showCareerPath(){
+  const m=$("modal");
+  let rows="";
+  for(let i=LEVELS.length-1;i>=0;i--){
+    const L=LEVELS[i];
+    const state = i<G.level ? "done" : (i===G.level ? "cur" : "future");
+    const tierNeeded = TIERS.find(t=>t.maxLevel>=i);
+    let reqTxt;
+    if(i===0) reqTxt="Ruolo d'ingresso, nessun requisito.";
+    else{
+      const prev=LEVELS[i-1];
+      const comps=reqEntries(prev.next).map(r=>`${icon(STAT(r.k).ic,12)}${r.v}`).join(" ");
+      reqTxt=`Richiede ${comps} · ≥${prev.minQ} trim. nel ruolo · azienda ${tierNeeded.label}+`;
+    }
+    const badge = state==="cur" ? `<span class="now">· sei qui</span>` : (state==="done" ? " ✓" : "");
+    rows += `<div class="prow ${state}"><div class="pdot"></div>
+      <div><div class="pt">${L.t}${badge}</div><div class="pd">${L.desc}</div><div class="pr">${reqTxt}</div></div></div>`;
+  }
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon('ladder',46)}</div><h2>Percorso di carriera</h2>
+    <div class="tagline">6 ruoli · dall'ingresso al vertice</div>
+    <div class="ladder">${rows}</div>
+    <button class="btn block" id="okPath">Chiudi</button>`;
+  m.querySelector("#okPath").onclick=hideOverlay;
+  showOverlay();
+}
+$("pathBtn").onclick=showCareerPath;
+
+/* ================= LIFESTYLE ================= */
+function showLifestyle(){
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon('life_normale',44)}</div><h2>Scegli lo stile di vita</h2>
+    <div class="tagline">più spendi, meno stress accumuli</div>
+    <div class="choices" id="lifeBox"></div>
+    <button class="btn block ghost" id="lifeClose" style="margin-top:12px">Chiudi</button>`;
+  const box=m.querySelector("#lifeBox");
+  LIFESTYLES.forEach((L,i)=>{
+    const cur=i===G.lifestyle;
+    const sv=L.stressQ>0?`+${L.stressQ}`:`${L.stressQ}`;
+    const rv=L.repQ>0?`+${L.repQ}`:`${L.repQ}`;
+    const b=document.createElement("button"); b.className="choice"; if(cur) b.style.borderColor="var(--acc)";
+    b.innerHTML=`<div class="ct">${icon(L.ic,17)} ${L.name} ${cur?'<span style="color:var(--acc);font-size:12px">· attuale</span>':''}</div>
+      <div class="cd">${L.desc}</div>
+      <div class="fx" style="margin-top:6px">
+        <span class="tag mon">${icon('stipendio',12)} spese vita ×${L.costMul}</span>
+        <span class="tag ${L.stressQ<=0?'down':'str'}">${icon('stress',12)} ${sv}/trim</span>
+        <span class="tag rep">${icon('reputazione',12)} ${rv}/trim</span>
+        ${L.poor?'<span class="tag str">😖 logoramento se prolungato</span>':''}</div>`;
+    b.onclick=()=>{
+      const changed=i!==G.lifestyle; G.lifestyle=i;
+      if(changed) pushLog(`🏡 Nuovo stile di vita: <b>${L.name}</b> (spese ×${L.costMul}, stress ${sv}/trim, reputazione ${rv}/trim).`);
+      hideOverlay(); render();
+    };
+    box.appendChild(b);
+  });
+  m.querySelector("#lifeClose").onclick=hideOverlay;
+  showOverlay();
+}
+$("lifeBtn").onclick=showLifestyle;
+
+/* ================= UTILS ================= */
+function showOverlay(){ $("overlay").classList.add("show"); }
+function hideOverlay(){ $("overlay").classList.remove("show"); }
+function show(id){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(id).classList.add("active"); window.scrollTo({top:0,behavior:"smooth"}); }
+</script>
