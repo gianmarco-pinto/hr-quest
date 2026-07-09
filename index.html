@@ -557,15 +557,15 @@ function companyLogo(company, size=22){
 // minQ = minimum quarters in this role before promoting (~2 years). companyTier gates max level.
 const LEVELS = [
   {t:"HR Assistant",        desc:"L'ingresso. Impari selezione e amministrazione di base.",
-   next:{sel:22, amm:20, org:18}, minQ:6},
+   next:{sel:22, amm:20, org:18}, minQ:8},
   {t:"HR Generalist",       desc:"Copri le HR a 360°: formazione, processi, relazioni.",
-   next:{for:34, org:34, rel:30}, minQ:8},
+   next:{for:34, org:34, rel:30}, minQ:11},
   {t:"HR Business Partner", desc:"Il riferimento HR del business: persone, decisioni, contenzioso.",
-   next:{sel:46, con:40, lea:44, rel:42}, minQ:8},
+   next:{sel:46, con:40, lea:44, rel:42}, minQ:12},
   {t:"HR Manager",          desc:"Guidi un team HR e i suoi progetti.",
-   next:{lea:60, rel:56, org:54, sin:48}, minQ:8},
+   next:{lea:60, rel:56, org:54, sin:48}, minQ:13},
   {t:"Senior HR Manager",   desc:"Gestisci relazioni complesse, sindacato e contenzioso.",
-   next:{lea:74, rel:68, sin:64, con:62, amm:58}, minQ:8},
+   next:{lea:74, rel:68, sin:64, con:62, amm:58}, minQ:13},
   {t:"HR Director",         desc:"Il vertice: la strategia HR dell'intera azienda.", next:null},
 ];
 
@@ -595,7 +595,7 @@ const ACTIONS = [
   {id:"guida",     ic:"leadership",     cat:"man",  ap:2, t:"Guida il team",          d:"Deleghi, motivi e sviluppi le persone.",           eff:{lea:9, rel:3, rep:2, stress:7}, req:{k:"rel", v:12}},
   {id:"capo",      ic:"relazionali",    cat:"man",  ap:1, t:"Curi il rapporto col capo", d:"Allinei aspettative e costruisci fiducia.",     eff:{rel:5, rep:2, stress:3}},
   {id:"network",   ic:"network",        cat:"man",  ap:1, t:"Networking",             d:"Eventi e contatti: la tua reputazione cresce.",    eff:{rep:5, sin:1, stress:2}},
-  {id:"corso",     ic:"corso",          cat:"none", ap:1, t:"Corso di aggiornamento", d:"Ti formi: cresci a 360° e stacchi un po' la testa dal lavoro.", eff:{sel:2, for:2, con:2, stress:-3}, cost:600},
+  {id:"corso",     ic:"corso",          cat:"none", ap:1, t:"Corso di aggiornamento", d:"Ti formi: cresci a 360° e stacchi un po' la testa dal lavoro.", eff:{sel:2, for:2, con:2, stress:-2}, cost:600},
   {id:"riposo",    ic:"riposo",         cat:"none", ap:1, t:"Stacca la spina",        d:"Una vacanza: abbassi molto lo stress. Costa in base al tuo tenore di vita.", eff:{stress:-20, rep:-1}, cost:1600, costScales:true},
 ];
 
@@ -666,8 +666,8 @@ const OBJ_REWARD = {rep:5, bank:700};
 const LIFESTYLES = [
   {ic:"life_frugale",      name:"Frugale",      costMul:0.6, stressQ:+3, repQ:-1, poor:true, desc:"Risparmi parecchio, ma tirare la cinghia logora."},
   {ic:"life_normale",      name:"Normale",      costMul:1.0, stressQ:+1, repQ:0,  poor:true, desc:"Vita equilibrata, ma a lungo andare pesa un po'."},
-  {ic:"life_confortevole", name:"Confortevole", costMul:1.5, stressQ:-3, repQ:+1, habituates:true, desc:"Piccoli lussi che ti fanno stare bene… finché non ci fai l'abitudine."},
-  {ic:"life_lussuoso",     name:"Lussuoso",     costMul:2.0, stressQ:-6, repQ:+2, desc:"Alto tenore: rilassa e alza il tuo standing, ma svuota il conto."},
+  {ic:"life_confortevole", name:"Confortevole", costMul:1.5, stressQ:-2, repQ:+1, habituates:true, desc:"Piccoli lussi che ti fanno stare bene… finché non ci fai l'abitudine."},
+  {ic:"life_lussuoso",     name:"Lussuoso",     costMul:2.0, stressQ:-4, repQ:+2, desc:"Alto tenore: rilassa e alza il tuo standing, ma svuota il conto."},
 ];
 
 // End-of-quarter economic surprises. amt scales a bit with company tier.
@@ -1034,7 +1034,7 @@ function settleQuarterFinances(){
   const fatigue = life.poor ? lifeFatigue(G.poorStreak) : 0;
   const habit = life.habituates ? comfortHabit(G.comfortStreak, -life.stressQ) : 0;
   const effStressQ = life.stressQ + habit;   // comfort relief fades toward 0 with habituation
-  G.stress=clamp(G.stress-5+effStressQ+fatigue,0,100);
+  G.stress=clamp(G.stress-3+effStressQ+fatigue,0,100);
   if(fatigue>0) pushLog(`😖 Lo stile <b>${life.name}</b> ti logora da anni: <span class="bad">+${fatigue} stress</span>.`);
   if(habit>0) pushLog(`😪 Ti sei abituato al comfort: il sollievo scende a <b>${effStressQ>0?'+':''}${effStressQ}</b> stress/trim.`);
   if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
@@ -1090,7 +1090,8 @@ function showImprevistoChoice(im, done){
 // Se possiedi la competenza (opzione con requisito soddisfatto), gestire la sfida ti
 // mette a tuo agio: lo stress cala invece di salire. L'opzione base resta stressante.
 function challengeEff(o, ok){
-  if(o.req && ok && o.eff.stress>0) return {...o.eff, stress:-o.eff.stress};
+  // Con la competenza la sfida ti mette a tuo agio: sollievo moderato (non annulla tutto).
+  if(o.req && ok && o.eff.stress>0) return {...o.eff, stress:-Math.max(2, Math.round(o.eff.stress*0.4))};
   return o.eff;
 }
 
