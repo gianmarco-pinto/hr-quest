@@ -1114,7 +1114,7 @@ function afterChallenge(){
   if(G.stress>=95) pushLog(`<span class="bad">🥵 Sei al limite del burnout.</span> Le prestazioni ne risentono: pensa a staccare.`);
   evaluateObjective();
   const promoted=tryPromotion();
-  if(!promoted) notifyIfCapped();
+  if(!promoted) checkOffers();
   G.lastChallengeGood=null;
   makeObjective();
   render();
@@ -1156,6 +1156,54 @@ function notifyIfCapped(){
   m.querySelector("#capSearch").onclick=showJobMarket;
   m.querySelector("#capOk").onclick=hideOverlay;
   showOverlay();
+}
+
+// Fine trimestre: possono arrivare offerte spontanee (headhunting). Se non ne arrivano
+// ma sei bloccato dal tetto aziendale, ricordati (una volta) di cercare lavoro.
+function checkOffers(){
+  const nx=LEVELS[G.level].next;
+  const cappedReady = !!(G.blocked && nx);        // pronto ma azienda troppo piccola
+  let chance=0, forNext=false;
+  if(cappedReady){ chance=0.55; forNext=true; }
+  else if(G.rep>=40 && G.monthsHere>=3){ chance=0.16; }   // la reputazione attira i cacciatori di teste
+  if(Math.random()<chance){ showIncomingOffer(forNext); return; }
+  notifyIfCapped();
+}
+// Candidati per un'offerta spontanea: solo ruoli per cui il giocatore è già qualificato.
+function offerCandidates(forNext){
+  const L=G.level, T=G.tier, out=[];
+  const push=(t,lvl)=>{ if(t>=0&&t<TIERS.length&&lvl>=1&&lvl<LEVELS.length&&TIERS[t].maxLevel>=lvl){
+    const o=makeOpening(t,lvl); if(!o.req || meetsReq(o.req)) out.push(o); } };
+  if(forNext){ const nl=L+1; for(let t=T+1;t<TIERS.length;t++) if(TIERS[t].maxLevel>=nl) push(t,nl); }
+  else { push(Math.min(TIERS.length-1,T+1),L); push(Math.min(TIERS.length-1,T+2),L); }
+  const seen=new Set(),u=[]; for(const o of out){ if(!seen.has(o.company.n)){ seen.add(o.company.n); u.push(o); } }
+  return u.slice(0,2);
+}
+function showIncomingOffer(forNext){
+  const offers=offerCandidates(forNext);
+  if(!offers.length){ notifyIfCapped(); return; }
+  const m=$("modal");
+  const sub = forNext
+    ? `La tua azienda non può promuoverti oltre, ma un'azienda più grande ti vuole come <b>${LEVELS[offers[0].level].t}</b>.`
+    : `Ti hanno notato: un'azienda ti propone un salto nello stesso ruolo, con più responsabilità e paga.`;
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon('offer',46)}</div>
+    <h2>${forNext?"Offerta per crescere!":"Ti hanno cercato"}</h2>
+    <p class="body">${sub}</p><div class="choices" id="offBox"></div>`;
+  const box=m.querySelector("#offBox");
+  offers.forEach(o=>{
+    const up=o.salary>G.salary;
+    const b=document.createElement("button"); b.className="choice";
+    b.innerHTML=`<div class="ct">${companyLogo(o.company,16)} ${o.company.n} — ${LEVELS[o.level].t}</div>
+      <div class="cd">${TIERS[o.company.tier].label} · ${TIERS[o.company.tier].size}</div>
+      <div class="fx" style="margin-top:6px">
+        <span class="tag rep">${icon('stipendio',12)} ${(o.salary/1000)}k/anno ${up?'<span style="color:var(--green)">▲</span>':''}</span>
+        <span class="tag str">${icon('stress',12)} nuovo ambiente</span></div>`;
+    b.onclick=()=>acceptOffer(o); box.appendChild(b);
+  });
+  const stay=document.createElement("button"); stay.className="choice"; stay.style.borderColor="var(--line)";
+  stay.innerHTML=`<div class="ct">🪑 Resta in ${G.company.n}</div><div class="cd">Ringrazi e rifiuti l'offerta.</div>`;
+  stay.onclick=()=>{ pushLog(`Hai declinato un'offerta esterna da un headhunter.`); hideOverlay(); render(); };
+  box.appendChild(stay); showOverlay();
 }
 
 function makeOpening(tier, level){
