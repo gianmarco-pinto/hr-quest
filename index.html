@@ -586,11 +586,12 @@ const TIERS = [
   {tier:3, label:"Multinazionale",    size:"2000+ dip.",      maxLevel:5, salMul:2.5,  strMul:1.35},
 ];
 
+// sc = clima aziendale: stress medio generato a trimestre (negativo = benessere, positivo = più stress).
 const COMPANIES = {
-  0:[{n:"PixelForge",logo:"🎮"},{n:"GreenSprout",logo:"🌱"},{n:"Nimbus Labs",logo:"🚀"},{n:"BeanCode",logo:"☕"},{n:"Fluxo",logo:"⚡"}],
-  1:[{n:"Meridian Group",logo:"🏢"},{n:"Aurora Retail",logo:"🛍️"},{n:"Delta Logistica",logo:"📦"},{n:"Verde Foods",logo:"🥗"},{n:"Cima Sport",logo:"⛰️"}],
-  2:[{n:"TechNova Corp",logo:"💻"},{n:"Sanitas Health",logo:"🏥"},{n:"FinPrime Bank",logo:"🏦"},{n:"Aureo Energia",logo:"🔋"},{n:"Marconi Media",logo:"📡"}],
-  3:[{n:"Global Dynamics",logo:"🌐"},{n:"OmniCorp Intl.",logo:"🏙️"},{n:"Vanta Worldwide",logo:"✈️"},{n:"Everest Pharma",logo:"💊"},{n:"Solaris Motors",logo:"🚗"}],
+  0:[{n:"PixelForge",logo:"🎮",sc:2},{n:"GreenSprout",logo:"🌱",sc:-3},{n:"Nimbus Labs",logo:"🚀",sc:3},{n:"BeanCode",logo:"☕",sc:-2},{n:"Fluxo",logo:"⚡",sc:2}],
+  1:[{n:"Meridian Group",logo:"🏢",sc:1},{n:"Aurora Retail",logo:"🛍️",sc:2},{n:"Delta Logistica",logo:"📦",sc:2},{n:"Verde Foods",logo:"🥗",sc:-2},{n:"Cima Sport",logo:"⛰️",sc:-3}],
+  2:[{n:"TechNova Corp",logo:"💻",sc:1},{n:"Sanitas Health",logo:"🏥",sc:3},{n:"FinPrime Bank",logo:"🏦",sc:4},{n:"Aureo Energia",logo:"🔋",sc:-1},{n:"Marconi Media",logo:"📡",sc:2}],
+  3:[{n:"Global Dynamics",logo:"🌐",sc:2},{n:"OmniCorp Intl.",logo:"🏙️",sc:3},{n:"Vanta Worldwide",logo:"✈️",sc:-1},{n:"Everest Pharma",logo:"💊",sc:3},{n:"Solaris Motors",logo:"🚗",sc:1}],
 };
 
 // Activities — cost 1 or 2 PA. NOT repeatable within the same quarter.
@@ -731,7 +732,36 @@ const reqEntries = nx => nx ? Object.keys(nx).map(k=>({k, v:nx[k]})) : [];
 function eur(n){ return n.toLocaleString('it-IT')+'€'; }
 const scaledReq = base => base + G.level*3;               // challenge thresholds grow with seniority
 function makeCompany(tier){ return {...pick(COMPANIES[tier]), tier, ...TIERS[tier]}; }
-function roleSalary(tier, level){ return Math.round((22000 + level*9000) * TIERS[tier].salMul / 500)*500; }
+
+// Fascia RAL (min-max) per ruolo. Non si sovrappongono: un ruolo superiore paga sempre più di uno inferiore.
+// La dimensione azienda (tier) posiziona dentro la fascia: startup verso il minimo, multinazionale verso il massimo.
+const SALARY_BANDS = [
+  [20000, 26000],    // HR Assistant
+  [28000, 42000],    // HR Generalist
+  [45000, 60000],    // HR Business Partner
+  [63000, 85000],    // HR Manager
+  [90000, 118000],   // Senior HR Manager
+  [126000, 175000],  // HR Director
+];
+function roleSalary(tier, level){
+  const [lo,hi] = SALARY_BANDS[Math.min(level, SALARY_BANDS.length-1)];
+  const f = clamp(tier/3 + (Math.random()*0.16 - 0.08), 0, 1);   // ±8% di variabilità, sempre dentro la fascia
+  return Math.round((lo + f*(hi-lo))/500)*500;
+}
+
+// Clima aziendale (stress medio a trimestre) → etichetta + colore.
+function clima(sc){
+  sc = sc||0;
+  if(sc<=-2) return {t:"sereno",        col:"var(--green)"};
+  if(sc===-1) return {t:"disteso",      col:"var(--green)"};
+  if(sc===0) return {t:"equilibrato",   col:"var(--dim)"};
+  if(sc<=2) return {t:"intenso",        col:"var(--orange)"};
+  return {t:"molto intenso",            col:"var(--red)"};
+}
+function climaTag(sc){
+  const c=clima(sc); const s=(sc>0?'+':'')+ (sc||0);
+  return `<span class="tag" style="color:${c.col}">${icon('stress',11)} clima ${c.t} (${s}/trim)</span>`;
+}
 
 /* ================= INTRO / OFFERS ================= */
 $("introBadge").innerHTML=icon('avatar',58,'introico');
@@ -770,7 +800,8 @@ function buildStartOffers(){
       <div class="tierlbl">${TIERS[0].label} · ${TIERS[0].size}</div>
       <div class="role">${f.role}</div>
       <div class="sal">${(f.sal/1000)}k <small>/ anno</small></div>
-      <div class="perk">${f.perk}</div>`;
+      <div class="perk">${f.perk}</div>
+      <div style="margin-top:8px">${climaTag(company.sc)}</div>`;
     el.onclick=()=>{ newGame(window._name, offer); startGame(); };
     wrap.appendChild(el);
   });
@@ -833,7 +864,7 @@ function render(){
   const s=G.stats;
   $("hName").textContent=G.name; $("avatar").innerHTML=icon('avatar',30);
   $("hRole").textContent=LEVELS[G.level].t;
-  $("hCo").innerHTML=`${companyLogo(G.company,15)} ${G.company.n} · ${TIERS[G.tier].label}`;
+  $("hCo").innerHTML=`${companyLogo(G.company,15)} ${G.company.n} · ${TIERS[G.tier].label} · <span style="color:${clima(G.company.sc).col}">clima ${clima(G.company.sc).t}</span>`;
   $("hMonth").textContent="Trim. "+((G.month-1)%4+1)+"/4";
   $("hYear").textContent="Anno "+(Math.floor((G.month-1)/4)+1);
   $("mNum").textContent=(G.month-1)%4+1;
@@ -1044,7 +1075,8 @@ function settleQuarterFinances(){
   const fatigue = life.poor ? lifeFatigue(G.poorStreak) : 0;
   const habit = life.habituates ? comfortHabit(G.comfortStreak, -life.stressQ) : 0;
   const effStressQ = life.stressQ + habit;   // comfort relief fades toward 0 with habituation
-  G.stress=clamp(G.stress-3+effStressQ+fatigue,0,100);
+  const sc = G.company.sc||0;                 // clima aziendale (benessere o pressione)
+  G.stress=clamp(G.stress-3+effStressQ+fatigue+sc,0,100);
   if(fatigue>0) pushLog(`😖 Lo stile <b>${life.name}</b> ti logora da anni: <span class="bad">+${fatigue} stress</span>.`);
   if(habit>0) pushLog(`😪 Ti sei abituato al comfort: il sollievo scende a <b>${effStressQ>0?'+':''}${effStressQ}</b> stress/trim.`);
   if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
@@ -1227,7 +1259,7 @@ function showIncomingOffer(forNext){
       <div class="cd">${TIERS[o.company.tier].label} · ${TIERS[o.company.tier].size}</div>
       <div class="fx" style="margin-top:6px">
         <span class="tag rep">${icon('stipendio',12)} ${(o.salary/1000)}k/anno ${up?'<span style="color:var(--green)">▲</span>':''}</span>
-        <span class="tag str">${icon('stress',12)} nuovo ambiente</span></div>`;
+        ${climaTag(o.company.sc)}</div>`;
     b.onclick=()=>acceptOffer(o); box.appendChild(b);
   });
   const stay=document.createElement("button"); stay.className="choice"; stay.style.borderColor="var(--line)";
@@ -1244,7 +1276,7 @@ function showIncomingOffer(forNext){
 
 function makeOpening(tier, level){
   const company=makeCompany(tier);
-  const salary=Math.round(roleSalary(tier,level)*(1+Math.random()*0.12)/500)*500;
+  const salary=roleSalary(tier,level);   // già dentro la fascia del ruolo
   return { company, level, salary, req: LEVELS[level-1] ? LEVELS[level-1].next : null };
 }
 // Openings adatte: il prossimo ruolo (in aziende più grandi) + qualche laterale (stesso ruolo, più paga).
@@ -1278,6 +1310,7 @@ function showJobMarket(){
           <div class="jsal">${icon('stipendio',12)} ${(o.salary/1000)}k${up?' <span style="color:var(--green)">▲</span>':''}</div></div>
         <div class="jrole">${LEVELS[o.level].t} · ${TIERS[o.company.tier].label} · ${TIERS[o.company.tier].size}</div>
         <div class="jreqs"><span class="jreql">Requisiti:</span> ${reqHtml}</div>
+        <div class="jreqs">${climaTag(o.company.sc)}</div>
         <button class="jbtn ${met?'':'lock'}" data-i="${i}" ${met?'':'disabled'}>${met?'Candidati →':'🔒 Requisiti mancanti'}</button>
       </div>`;
     }).join("")+`</div>`;
