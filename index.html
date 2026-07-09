@@ -1501,9 +1501,11 @@ function showLifestyle(){
         ${L.poor?'<span class="tag str">😖 logoramento se prolungato</span>':''}</div>`;
     b.onclick=()=>{
       const changed=i!==G.lifestyle;
+      const downgrade=i<G.lifestyle;            // scendere di tenore stressa; salire no
       if(changed){
-        G.lifestyle=i; G.stress=clamp(G.stress+3,0,100);
-        pushLog(`🏡 Nuovo stile di vita: <b>${L.name}</b> (spese ×${L.costMul}, stress ${sv}/trim, reputazione ${rv}/trim). <span class="bad">+3 stress</span> per il cambiamento.`);
+        const cost = downgrade ? 3 : 0;
+        G.lifestyle=i; if(cost) G.stress=clamp(G.stress+cost,0,100);
+        pushLog(`🏡 Nuovo stile di vita: <b>${L.name}</b> (spese ×${L.costMul}, stress ${sv}/trim, reputazione ${rv}/trim).${cost?` <span class="bad">+${cost} stress</span> per il ridimensionamento.`:``}`);
       }
       hideOverlay(); if(G.stress>=100){ loseGame(); return; } render();
     };
