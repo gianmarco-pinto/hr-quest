@@ -399,6 +399,19 @@
     .stats .stat .nm{width:96px}
   }
   .obj{padding:11px 14px;margin-bottom:12px}
+
+  /* TUTORIAL */
+  .tutdim{position:fixed;inset:0;background:rgba(6,9,20,.78);z-index:48;animation:fade .25s}
+  .tut-hl{position:relative;z-index:49;outline:3px solid var(--gold);outline-offset:3px;border-radius:16px;
+    box-shadow:0 0 34px rgba(255,207,92,.35)}
+  .tutcard{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));
+    width:min(480px,calc(100vw - 28px));z-index:49;background:linear-gradient(180deg,var(--panel),var(--bg2));
+    border:1px solid var(--gold);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);animation:pop .3s cubic-bezier(.2,1.2,.3,1)}
+  .tutcard .tstep{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
+  .tutcard .tt{font-weight:800;font-size:16px;margin-top:3px}
+  .tutcard .td{font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:5px}
+  .tutcard .tbtns{display:flex;gap:9px;margin-top:13px}
+  .tutcard .tbtns .btn{flex:1;padding:11px;font-size:14px}
 </style>
 
 <div class="wrap">
@@ -1111,7 +1124,47 @@ function buildStartOffers(){
 }
 
 /* ================= GAME START / RENDER ================= */
-function startGame(){ initStaticIcons(); buildStatSkeleton(); buildActions(); show("s-game"); render(); }
+function startGame(){ initStaticIcons(); buildStatSkeleton(); buildActions(); show("s-game"); render(); startTutorial(); }
+
+/* ================= TUTORIAL (solo prima partita) ================= */
+const TUT_STEPS=[
+  {sel:'.vitals',  t:"Le tue risorse", d:"Stipendio, reputazione e risparmi. E soprattutto lo Stress: se arriva a 100 vai in burnout e la partita finisce. Tienilo d'occhio."},
+  {sel:'.ctx',     t:"Stile di vita e traguardo", d:"Lo stile di vita scambia soldi e stress; la barra mostra quanto manca alla prossima promozione (competenze + esperienza)."},
+  {sel:'#objCard', t:"L'obiettivo del trimestre", d:"Ogni trimestre hai una direzione: centrarla ti dà reputazione e denaro extra."},
+  {sel:'#actList', t:"Le tue mosse", d:"Hai 3 Punti Azione a trimestre. Scegli le attività per far crescere le competenze richieste dal prossimo ruolo."},
+  {sel:'#endBtn',  t:"Chiudi il trimestre", d:"Quando hai finito i PA, affronta la sfida di fine trimestre: le opzioni migliori si sbloccano con le competenze giuste."},
+];
+let _tut=null;
+function startTutorial(){
+  try{ if(localStorage.getItem('hrq_tut')) return; }catch(e){ return; }
+  _tut={step:0, dim:document.createElement('div'), card:document.createElement('div')};
+  _tut.dim.className='tutdim'; _tut.card.className='tutcard';
+  document.body.appendChild(_tut.dim); document.body.appendChild(_tut.card);
+  tutStep();
+}
+function tutStep(){
+  if(!_tut) return;
+  const prev=document.querySelector('.tut-hl'); if(prev) prev.classList.remove('tut-hl');
+  const i=_tut.step;
+  if(i>=TUT_STEPS.length){ endTutorial(); return; }
+  const s=TUT_STEPS[i];
+  const el=document.querySelector(s.sel);
+  if(el){ el.classList.add('tut-hl'); el.scrollIntoView({block:'center',behavior:'smooth'}); }
+  const last=i===TUT_STEPS.length-1;
+  _tut.card.innerHTML=`<div class="tstep">Come si gioca · ${i+1}/${TUT_STEPS.length}</div>
+    <div class="tt">${s.t}</div><div class="td">${s.d}</div>
+    <div class="tbtns"><button class="btn ghost" id="tutSkip">Salta</button>
+    <button class="btn" id="tutNext">${last?'Gioca! →':'Avanti →'}</button></div>`;
+  _tut.card.querySelector('#tutNext').onclick=()=>{ sfx('click'); _tut.step++; tutStep(); };
+  _tut.card.querySelector('#tutSkip').onclick=endTutorial;
+}
+function endTutorial(){
+  if(!_tut) return;
+  const prev=document.querySelector('.tut-hl'); if(prev) prev.classList.remove('tut-hl');
+  _tut.dim.remove(); _tut.card.remove(); _tut=null;
+  try{ localStorage.setItem('hrq_tut','1'); }catch(e){}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 function initStaticIcons(){
   $("icMoney").innerHTML=icon('stipendio',18);
