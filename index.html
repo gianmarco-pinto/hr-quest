@@ -356,6 +356,29 @@
     .modal{padding:20px 18px}
     .modal h2{font-size:18px}
   }
+
+  /* ===== Cruscotto compatto (UX pass) ===== */
+  .hud{padding:12px 14px}
+  .avatar{width:48px;height:48px}
+  .vitals{padding:12px 14px;margin-bottom:10px}
+  .vitals .chips{margin-bottom:10px}
+  .vitals .stressbar{padding:0;margin:0;border:0;background:none}
+  .vitals:has(#stressCard.crit){border-color:var(--red);animation:pulse 1.1s infinite}
+  .ctx{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+  .ctx>.card{margin-bottom:0;padding:11px 13px}
+  @media(min-width:560px){ .ctx{flex-direction:row} .ctx>.card{flex:1;min-width:0} }
+  .promobtns{display:flex;gap:8px;margin:0 0 10px}
+  .pathbtn{min-height:40px}
+  .stats{padding:12px 16px 6px;margin-bottom:10px}
+  .stats>h3{margin-bottom:9px}
+  .catgroup{margin-bottom:3px}
+  .stat{margin-bottom:8px}
+  @media(min-width:560px){
+    .stats .catgroup{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+    .stats .cathead{grid-column:1 / -1}
+    .stats .stat .nm{width:96px}
+  }
+  .obj{padding:11px 14px;margin-bottom:12px}
 </style>
 
 <div class="wrap">
@@ -413,35 +436,43 @@
       </div>
     </div>
 
-    <div class="chips">
-      <div class="chip"><div class="ic" id="icMoney"></div><div><div class="v" id="cMoney">0</div><div class="l">Stipendio</div></div></div>
-      <div class="chip"><div class="ic" id="icRep"></div><div><div class="v" id="cRep">0</div><div class="l">Reputazione</div></div></div>
-      <div class="chip"><div class="ic" id="icBank"></div><div><div class="v" id="cBank">0€</div><div class="l">Risparmi</div></div></div>
-    </div>
-
-    <div class="card stressbar" id="stressCard">
-      <div class="sbtop"><span class="sbl" id="sbIc">🔥 Stress</span><span class="sbv" id="sbVal">0 / 100</span></div>
-      <div class="track"><span class="sbfill ok" id="sbFill" style="width:0%"></span></div>
-      <div class="sbnote" id="sbNote"></div>
-    </div>
-
-    <div class="card lifestyle" id="lifeCard">
-      <div class="lrow">
-        <div class="lic" id="lifeIc">🏠</div>
-        <div class="ltxt"><div class="ll">Stile di vita</div>
-          <div class="lname" id="lifeName">Normale</div><div class="lfx" id="lifeFx"></div></div>
-        <button class="lbtn" id="lifeBtn">Cambia</button>
+    <div class="card vitals">
+      <div class="chips">
+        <div class="chip"><div class="ic" id="icMoney"></div><div><div class="v" id="cMoney">0</div><div class="l">Stipendio</div></div></div>
+        <div class="chip"><div class="ic" id="icRep"></div><div><div class="v" id="cRep">0</div><div class="l">Reputazione</div></div></div>
+        <div class="chip"><div class="ic" id="icBank"></div><div><div class="v" id="cBank">0€</div><div class="l">Risparmi</div></div></div>
+      </div>
+      <div class="stressbar" id="stressCard">
+        <div class="sbtop"><span class="sbl" id="sbIc">🔥 Stress</span><span class="sbv" id="sbVal">0 / 100</span></div>
+        <div class="track"><span class="sbfill ok" id="sbFill" style="width:0%"></span></div>
+        <div class="sbnote" id="sbNote"></div>
       </div>
     </div>
 
-    <div class="card promo">
-      <div class="top"><span class="muted">Prossimo traguardo</span><b id="pNext">—</b></div>
-      <div class="track"><span id="pBar" style="width:0%"></span></div>
-      <div class="hint" id="pHint"></div>
-      <div class="promobtns">
-        <button class="pathbtn" id="pathBtn"></button>
-        <button class="pathbtn" id="jobBtn"></button>
+    <div class="ctx">
+      <div class="card lifestyle" id="lifeCard">
+        <div class="lrow">
+          <div class="lic" id="lifeIc">🏠</div>
+          <div class="ltxt"><div class="ll">Stile di vita</div>
+            <div class="lname" id="lifeName">Normale</div><div class="lfx" id="lifeFx"></div></div>
+          <button class="lbtn" id="lifeBtn">Cambia</button>
+        </div>
       </div>
+      <div class="card promo">
+        <div class="top"><span class="muted">Prossimo traguardo</span><b id="pNext">—</b></div>
+        <div class="track"><span id="pBar" style="width:0%"></span></div>
+        <div class="hint" id="pHint"></div>
+      </div>
+    </div>
+
+    <div class="promobtns">
+      <button class="pathbtn" id="pathBtn"></button>
+      <button class="pathbtn" id="jobBtn"></button>
+    </div>
+
+    <div class="card stats">
+      <h3>Competenze</h3>
+      <div id="statList"></div>
     </div>
 
     <div class="card obj" id="objCard">
@@ -451,11 +482,6 @@
           <div class="g" id="objG">—</div><div class="p" id="objP"></div></div>
         <div class="rew" id="objRew"></div>
       </div>
-    </div>
-
-    <div class="card stats">
-      <h3>Competenze</h3>
-      <div id="statList"></div>
     </div>
 
     <div class="section-h">
@@ -941,9 +967,9 @@ function renderStress(){
   const extra=Math.round((G.salary/4)*Math.min(s,100)/400);   // spese extra/trim per lo stress
   const note=$("sbNote");
   if(s>=90) note.innerHTML=`⚠️ Rischio burnout! A 100 la partita finisce · malus −${malus}% · +${extra.toLocaleString('it-IT')}€ spese/trim`;
-  else if(malus>0) note.innerHTML=`malus competenze −${malus}% · +${extra.toLocaleString('it-IT')}€ di spese extra/trim`;
-  else note.innerHTML=`nessun malus · solo +${extra.toLocaleString('it-IT')}€ di spese/trim`;
+  else note.innerHTML=`malus competenze −${malus}% · +${extra.toLocaleString('it-IT')}€ di spese extra/trim`;
   note.className="sbnote"+(s>=75?" danger":"");
+  note.style.display = malus>0 ? "" : "none";   // mostra la nota solo quando c'è malus
 }
 
 function renderPromo(){
