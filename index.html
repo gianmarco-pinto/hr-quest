@@ -1303,6 +1303,25 @@ function render(){
   $("jobBtn").classList.toggle('hot', !!G.blocked);
   renderStress(); renderLifestyle(); renderPromo(); renderObjective(); renderFeed();
   saveGame();
+  maybeStressAlert();
+}
+
+// Alert una tantum quando lo stress supera 80: si riarma solo tornando sotto 70.
+function maybeStressAlert(){
+  if(!G) return;
+  if(G.stress<70){ G.stressWarned=false; return; }
+  if(G.stress>=80 && !G.stressWarned && !$("overlay").classList.contains("show")){
+    G.stressWarned=true; sfx('stress'); saveGame();
+    const m=$("modal");
+    m.innerHTML=`<div class="em" style="color:var(--red)">${icon('stress',46)}</div>
+      <h2>Attenzione allo stress!</h2>
+      <div class="tagline" style="color:var(--red)">sei a ${Math.round(G.stress)} / 100</div>
+      <p class="body">A <b>100</b> vai in burnout e la partita finisce. Corri ai ripari:
+        <b>stacca la spina</b>, alza il tenore di vita o scegli attività leggere.</p>
+      <button class="btn block" id="okStress">Ho capito</button>`;
+    m.querySelector("#okStress").onclick=hideOverlay;
+    showOverlay();
+  }
 }
 
 function renderLifestyle(){
