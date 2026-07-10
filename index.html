@@ -1174,11 +1174,13 @@ function startGame(){ initStaticIcons(); buildStatSkeleton(); buildActions(); sh
 
 /* ================= TUTORIAL (solo prima partita) ================= */
 const TUT_STEPS=[
-  {sel:'.vitals',  t:"Le tue risorse", d:"Stipendio, reputazione e risparmi. E soprattutto lo Stress: se arriva a 100 vai in burnout e la partita finisce. Tienilo d'occhio."},
-  {sel:'.ctx',     t:"Stile di vita e traguardo", d:"Lo stile di vita scambia soldi e stress; la barra mostra quanto manca alla prossima promozione (competenze + esperienza)."},
-  {sel:'#objCard', t:"L'obiettivo del trimestre", d:"Ogni trimestre hai una direzione: centrarla ti dà reputazione e denaro extra."},
-  {sel:'#actList', t:"Le tue mosse", d:"Hai 3 Punti Azione a trimestre. Scegli le attività per far crescere le competenze richieste dal prossimo ruolo."},
-  {sel:'#endBtn',  t:"Chiudi il trimestre", d:"Quando hai finito i PA, affronta la sfida di fine trimestre: le opzioni migliori si sbloccano con le competenze giuste."},
+  {sel:'.hud',     t:"Benvenuto in HR Quest!", d:"Parti da neolaureato: l'obiettivo è scalare fino a HR Director. Qui in alto vedi sempre il tuo ruolo, la tua azienda e il clima che ci si respira: più è teso, più stress accumuli ogni trimestre."},
+  {sel:'.vitals',  t:"Le tue risorse", d:"Stipendio annuo, reputazione (più è alta, più aziende ti cercano) e risparmi. Sotto c'è la barra dello Stress: se arriva a 100 vai in burnout e la partita finisce."},
+  {sel:'#lifeCard',t:"Lo stile di vita", d:"Quanto spendi per vivere. Un tenore più alto costa di più ma ti rilassa ogni trimestre; uno più basso fa risparmiare ma alla lunga logora. Lo cambi quando vuoi con “Cambia”."},
+  {sel:'.promo',   t:"Il prossimo traguardo", d:"Qui vedi cosa ti manca per la promozione: competenze da raggiungere ed esperienza da accumulare. Occhio: le aziende piccole non possono darti i ruoli più alti — prima o poi dovrai usare “Cerca lavoro”."},
+  {sel:'#objCard', t:"L'obiettivo del trimestre", d:"Ogni trimestre ricevi una piccola missione. Se la centri, guadagni reputazione e un bonus in denaro."},
+  {sel:'#actList', t:"Le tue mosse", d:"Ogni trimestre hai 3 Punti Azione da spendere in queste attività. Ognuna fa crescere alcune competenze ma può aumentare lo stress: leggi le etichette prima di scegliere."},
+  {sel:'#endBtn',  t:"Chiudi il trimestre", d:"Quando hai speso i Punti Azione, premi qui: affronterai la sfida di fine trimestre. Le risposte migliori si sbloccano solo con le competenze giuste — e chi le ha si stressa meno."},
 ];
 let _tut=null;
 function startTutorial(){
