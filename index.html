@@ -379,6 +379,9 @@
   .vitals{padding:12px 14px;margin-bottom:10px}
   .vitals .chips{margin-bottom:10px}
   .vitals .stressbar{padding:0;margin:0;border:0;background:none}
+  .emgbar{height:9px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);overflow:hidden;margin:2px 0 12px}
+  .emgbar span{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .1s linear}
+  .emgfx{justify-content:center;margin:8px 0 6px}
   .taintrow{margin-top:10px;padding:8px 11px;border-radius:10px;align-items:center;gap:8px;
     background:rgba(255,90,90,.08);border:1px solid rgba(255,90,90,.28);font-size:12px;color:#ff9a8a;font-weight:700;line-height:1.35}
   .vitals:has(#stressCard.crit){border-color:var(--red);animation:pulse 1.1s infinite}
@@ -634,6 +637,7 @@ const ICONS = {
   spark:'<path d="M12 3v3.4M12 17.6V21M3 12h3.4M17.6 12H21M6 6l2.4 2.4M18 6l-2.4 2.4M6 18l2.4-2.4M18 18l-2.4-2.4"/>',
   clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 1.9"/>',
   sound:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  bolt:'<path d="M13 2.5 L5.5 13 h5 l-1.5 8.5 L18 10.5 h-5.2 z"/>',
   warn:'<path d="M12 3.6 21 19.4H3z"/><path d="M12 9.8v4.4"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/>',
   spy:'<circle cx="12" cy="12" r="9"/><path d="M4.5 10.5h15"/><circle cx="9" cy="13.5" r="1.8"/><circle cx="15" cy="13.5" r="1.8"/><path d="M10.8 13.5h2.4"/>',
   mute:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
@@ -1566,12 +1570,90 @@ function rollImprevisto(){
 function lifeFatigue(streak){ const y=Math.floor(streak/4); return Math.min(8, Math.max(0, y-1)*2); }       // +2 stress/anno, cap +8
 function comfortHabit(streak, relief){ const y=Math.floor(streak/4); return Math.min(relief, Math.max(0, y-1)); } // il bonus cala di 1/anno
 
+/* ================= EMERGENZE A TEMPO ================= */
+// Almeno una volta l'anno: una crisi improvvisa. Hai pochi secondi per decidere, a istinto:
+// gli effetti sono nascosti (li scopri DOPO). Se scade il tempo = indecisione (penalità).
+const EMERGENCIES = [
+  {h:"Data breach", tag:"Sicurezza dati", body:"I dati di tutti i dipendenti sono esposti online. Il telefono squilla. Devi decidere ORA.", opts:[
+    {ct:"Avvisi subito tutti, in modo trasparente",  eff:{con:3, rep:6, stress:8},  res:"La trasparenza paga: la fiducia regge, ma è stata dura."},
+    {ct:"Contieni e indaghi in silenzio prima",       eff:{org:4, amm:2, stress:4},  res:"Gestione ordinata: niente panico, danno limitato."},
+    {ct:"Minimizzi e speri non trapeli",              eff:{rep:-9, stress:6},        res:"Trapela lo stesso, e ora sembri pure reticente."}]},
+  {h:"Rissa in riunione", tag:"Conflitto", body:"Due manager esplodono in una lite feroce davanti a tutto il reparto. Gli occhi sono su di te.", opts:[
+    {ct:"Intervieni subito a muso duro",              eff:{lea:5, rep:-3, stress:7}, res:"Fermi tutto, ma qualcuno ti trova troppo autoritario."},
+    {ct:"Li separi e medi a freddo, uno a uno",       eff:{rel:6, rep:3, stress:3},  res:"Disinneschi con classe: tutti si sentono ascoltati."},
+    {ct:"Lasci sfogare e poi verbalizzi",             eff:{amm:3, rep:-2, stress:6}, res:"La tensione resta nell'aria per settimane."}]},
+  {h:"Post virale contro l'azienda", tag:"Reputazione", body:"Un ex dipendente pubblica accuse pesanti. Il post sta esplodendo. Rispondi?", opts:[
+    {ct:"Rispondi pubblicamente coi fatti",           eff:{con:3, rep:5, stress:9},  res:"I fatti spengono il fuoco, ma è stato uno stress enorme."},
+    {ct:"Contatti la persona in privato",             eff:{rel:6, rep:2, stress:4},  res:"Un dialogo vero: la cosa rientra senza clamore."},
+    {ct:"Ignori, tanto passerà",                      eff:{rep:-8, stress:3},        res:"Non passa: la storia rimbalza ovunque."}]},
+  {h:"Infortunio sul lavoro", tag:"Sicurezza", body:"Un operaio si è fatto male e gli ispettori stanno arrivando. Come reagisci?", opts:[
+    {ct:"Attivi subito il protocollo di sicurezza",   eff:{amm:5, rep:4, stress:6},  res:"Reazione impeccabile: gestione da manuale."},
+    {ct:"Chiami il legale e temporeggi",              eff:{con:5, stress:5},         res:"Copri le spalle all'azienda, ma il clima si raffredda."},
+    {ct:"Sistemi le carte al volo",                   eff:{rep:-7, stress:8},        res:"Gli ispettori se ne accorgono: figuraccia e rilievi."}]},
+  {h:"Tagli entro sera", tag:"Business", body:"Il CEO ti convoca: 20 esuberi da gestire entro stasera. Nessun preavviso.", opts:[
+    {ct:"Proponi alternative ai licenziamenti",       eff:{org:5, rep:5, stress:9},  res:"Salvi metà dei posti: il CEO ti guarda con altri occhi."},
+    {ct:"Esegui in modo impeccabile e umano",         eff:{amm:3, rel:4, stress:7},  res:"Tagli dolorosi, gestiti con dignità."},
+    {ct:"Esegui e basta, il più in fretta possibile", eff:{rep:-6, stress:6},        res:"Fatto, ma lasci feriti e malumore ovunque."}]},
+  {h:"Sciopero a sorpresa", tag:"Sindacale", body:"Stamattina i lavoratori incrociano le braccia senza preavviso. La produzione è ferma.", opts:[
+    {ct:"Vai al cancello a trattare adesso",          eff:{sin:6, rel:2, stress:8},  res:"Faccia a faccia rischioso, ma sblocchi la situazione."},
+    {ct:"Convochi i rappresentanti a un tavolo",      eff:{sin:4, org:2, stress:5},  res:"Riporti tutto in un binario istituzionale."},
+    {ct:"Aspetti che si stanchino",                   eff:{rep:-7, stress:7},        res:"Lo sciopero si allunga e ti scoppia in mano."}]},
+];
+let _emgTimer=null;
+const EMG_SECONDS=11;
+function dueEmergency(){
+  if(G.month<3) return false;                     // lascia respirare le prime partenze
+  const year=Math.ceil(G.month/4);
+  if(G.emgDoneYear===year) return false;          // max una l'anno
+  const qInYear=((G.month-1)%4)+1;
+  if(qInYear>=4 || Math.random()<0.34){ G.emgDoneYear=year; return true; }   // garantita entro Q4
+  return false;
+}
+function showEmergency(){
+  const emg=pick(EMERGENCIES);
+  const opts=[...emg.opts].sort(()=>Math.random()-0.5);
+  sfx('stress');
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--red)">${icon('bolt',44)}</div>
+    <h2>⚡ Emergenza!</h2>
+    <div class="tagline" style="color:var(--red)">${emg.tag} · decidi a istinto, non sai come andrà</div>
+    <div class="emgbar"><span id="emgFill"></span></div>
+    <p class="body">${emg.body}</p>
+    <div class="choices" id="emgBox"></div>`;
+  const box=m.querySelector('#emgBox');
+  opts.forEach(o=>{ const b=document.createElement('button'); b.className='choice';
+    b.innerHTML=`<div class="ct">${o.ct}</div><div class="rq" style="color:var(--dim2)">esito ignoto</div>`;
+    b.onclick=()=>emgResolve(emg,o,false); box.appendChild(b); });
+  showOverlay();
+  let t=EMG_SECONDS; const fill=$("emgFill"); if(fill) fill.style.width='100%';
+  _emgTimer=setInterval(()=>{ t-=0.1; const f=$("emgFill");
+    if(f){ const pct=Math.max(0,t/EMG_SECONDS*100); f.style.width=pct+'%'; f.style.background=t<4?'var(--red)':'linear-gradient(90deg,var(--gold),var(--orange))'; }
+    if(t<=0){ emgResolve(emg,null,true); } }, 100);
+}
+function emgResolve(emg, o, timeout){
+  if(_emgTimer){ clearInterval(_emgTimer); _emgTimer=null; }
+  const eff = timeout ? {stress:11, rep:-5} : o.eff;
+  const res = timeout ? "Ti sei bloccato: hai perso l'attimo per gestirla." : o.res;
+  applyEff(eff);
+  sfx(timeout ? 'lose' : 'action');
+  pushLog(`${icon('bolt',13)} <b>Emergenza — ${emg.h}</b> — ${res}`);
+  if(G.stress>=100){ hideOverlay(); loseGame(); return; }
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:${timeout?'var(--red)':'var(--gold)'}">${icon(timeout?'stress':'spark',44)}</div>
+    <h2>${timeout?'Troppo tardi!':'Deciso.'}</h2>
+    <p class="body">${res}</p>
+    <div class="fx emgfx">${fxTags(eff)}</div>
+    <button class="btn block" id="emgOk">Continua →</button>`;
+  m.querySelector('#emgOk').onclick=()=>{ hideOverlay(); G.lastChallengeGood=null; afterChallenge(); };
+}
+
 function endMonth(){
   // Order matters: the surprise hits BEFORE payday — la affronti con la cassa che hai ora.
   resolveImprevisto(rollImprevisto(), ()=>{
     settleQuarterFinances();
     if(G.stress>=100){ loseGame(); return; }
-    showChallenge(pickChallenge());
+    if(dueEmergency()) showEmergency();
+    else showChallenge(pickChallenge());
   });
 }
 
