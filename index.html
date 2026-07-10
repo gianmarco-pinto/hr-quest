@@ -412,6 +412,12 @@
   .tutcard .td{font-size:13.5px;color:var(--dim);line-height:1.5;margin-top:5px}
   .tutcard .tbtns{display:flex;gap:9px;margin-top:13px}
   .tutcard .tbtns .btn{flex:1;padding:11px;font-size:14px}
+
+  /* PERK CHIPS */
+  #perkChips{display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle}
+  .pchip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+    font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:none;
+    color:var(--gold);background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.3)}
 </style>
 
 <div class="wrap">
@@ -505,7 +511,7 @@
     </div>
 
     <div class="card stats">
-      <h3>Competenze</h3>
+      <h3>Competenze <span id="perkChips"></span></h3>
       <div id="statList"></div>
     </div>
 
@@ -969,6 +975,44 @@ const RARE_CHALLENGES = [
    ]},
 ];
 function pickChallenge(){ return Math.random()<0.08 ? pick(RARE_CHALLENGES) : pick(CHALLENGES); }
+
+/* ================= SPECIALIZZAZIONI (perk permanenti) ================= */
+// A ogni promozione scegli 1 tratto tra 2 proposti. Effetti applicati a fine trimestre,
+// nelle sfide (chReq), nelle spese (costMul) o al cambio azienda (salMul).
+const PERKS=[
+  {id:'talent',   ic:'selezione',  n:"Talent scout",   d:"+1 Selezione ogni trimestre",                type:'statQ', k:'sel'},
+  {id:'maestro',  ic:'formazione', n:"Maestro",        d:"+1 Formazione ogni trimestre",               type:'statQ', k:'for'},
+  {id:'zen',      ic:'stress',     n:"Equilibrio zen", d:"−2 stress ogni trimestre",                   type:'stressQ', v:-2},
+  {id:'nego',     ic:'sindacale',  n:"Negoziatore",    d:"Le mosse da esperto richiedono 4 punti in meno", type:'chReq', v:-4},
+  {id:'rete',     ic:'network',    n:"Ben introdotto", d:"+1 Reputazione ogni trimestre",              type:'repQ', v:1},
+  {id:'formica',  ic:'risparmi',   n:"Formica",        d:"Spese di vita −10%",                         type:'costMul', v:0.9},
+  {id:'ambizioso',ic:'stipendio',  n:"Ambizioso",      d:"+5% di stipendio quando cambi azienda",      type:'salMul', v:1.05},
+];
+const myPerks=()=> (G && G.perks) || [];
+const perkHas=id=> myPerks().includes(id);
+function perkSum(type){ let s=0; PERKS.forEach(p=>{ if(p.type===type && perkHas(p.id)) s+=(p.v||0); }); return s; }
+function perkCostMul(){ let m=1; PERKS.forEach(p=>{ if(p.type==='costMul' && perkHas(p.id)) m*=p.v; }); return m; }
+function showPerkChoice(){
+  const pool=PERKS.filter(p=>!perkHas(p.id));
+  if(!pool.length){ render(); return; }
+  const picks=[]; const tmp=[...pool];
+  while(picks.length<2 && tmp.length) picks.push(tmp.splice(rnd(tmp.length),1)[0]);
+  const m=$("modal");
+  m.innerHTML=`<div class="em" style="color:var(--gold)">${icon('spark',44)}</div>
+    <h2>Scegli una specializzazione</h2>
+    <div class="tagline">un tratto permanente della tua carriera</div>
+    <div class="choices" id="perkBox"></div>`;
+  const box=m.querySelector('#perkBox');
+  picks.forEach(p=>{
+    const b=document.createElement('button'); b.className='choice';
+    b.innerHTML=`<div class="ct">${icon(p.ic,16)} ${p.n}</div><div class="cd">${p.d}</div>`;
+    b.onclick=()=>{ (G.perks=G.perks||[]).push(p.id); sfx('obj');
+      pushLog(`✨ Nuova specializzazione: <b>${p.n}</b> — ${p.d}.`);
+      hideOverlay(); render(); };
+    box.appendChild(b);
+  });
+  showOverlay();
+}
 // Vista della sfida per la fascia corrente (mid = testo base).
 function chView(ch){
   const v=(ch.v && ch.v[bandOf(G.level)]) || {};
@@ -1032,7 +1076,7 @@ function newGame(name, offer){
     rep:5, stress:8, bank:1500,
     salary:offer.salary, level:0, tier:c.tier, company:c,
     ap:3, usedActs:[], log:[], monthsHere:0, blocked:false, blockedNotified:false,
-    objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0,
+    objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0, perks:[],
   };
   pushLog(`Entri in ${companyLogo(c,14)} <b>${c.n}</b> come <b>${LEVELS[0].t}</b>. Che avventura cominci!`);
   makeObjective();
@@ -1046,7 +1090,7 @@ const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const avg = s => Math.round(STATS.reduce((t,st)=>t+s[st.k],0)/STATS.length);
 const reqEntries = nx => nx ? Object.keys(nx).map(k=>({k, v:nx[k]})) : [];
 function eur(n){ return n.toLocaleString('it-IT')+'€'; }
-const scaledReq = base => base + G.level*3;               // challenge thresholds grow with seniority
+const scaledReq = base => Math.max(6, base + G.level*3 + perkSum('chReq'));   // soglie sfide: crescono col ruolo, il perk Negoziatore le riduce
 function makeCompany(tier){ return {...pick(COMPANIES[tier]), tier, ...TIERS[tier]}; }
 
 // Fascia RAL (min-max) per ruolo. Non si sovrappongono: un ruolo superiore paga sempre più di uno inferiore.
@@ -1235,6 +1279,8 @@ function render(){
   const dots=$("apDots"); dots.innerHTML="";
   for(let i=0;i<3;i++){const d=document.createElement("div");d.className="dot"+(i<G.ap?" on":"");dots.appendChild(d);}
   if(_actBand!==bandOf(G.level)) buildActions();   // promozione/cambio fascia → nuove varianti attività
+  $("perkChips").innerHTML = myPerks().map(id=>{ const p=PERKS.find(x=>x.id===id);
+    return p?`<span class="pchip" title="${p.n}: ${p.d}">${icon(p.ic,11)} ${p.n}</span>`:''; }).join('');
   ACTIONS.forEach(a=>{
     const el=$("act-"+a.id);
     const cost=a.ap||1;
@@ -1427,7 +1473,7 @@ function settleQuarterFinances(){
   const income=Math.round(G.salary/4);
   const life=LIFESTYLES[G.lifestyle];
   const stressExtra=Math.round(income*Math.min(G.stress,100)/400);
-  const expenses=Math.round(income*0.5*life.costMul)+stressExtra;
+  const expenses=Math.round(income*0.5*life.costMul*perkCostMul())+stressExtra;
   const net=income-expenses;
   G.bank+=net;
 
@@ -1439,7 +1485,10 @@ function settleQuarterFinances(){
   const habit = life.habituates ? comfortHabit(G.comfortStreak, -life.stressQ) : 0;
   const effStressQ = life.stressQ + habit;   // comfort relief fades toward 0 with habituation
   const sc = G.company.sc||0;                 // clima aziendale (benessere o pressione)
-  G.stress=clamp(G.stress-3+effStressQ+fatigue+sc,0,100);
+  G.stress=clamp(G.stress-3+effStressQ+fatigue+sc+perkSum('stressQ'),0,100);
+  // Specializzazioni passive: crescita competenze e reputazione a fine trimestre.
+  PERKS.forEach(p=>{ if(p.type==='statQ' && perkHas(p.id)) G.stats[p.k]=clamp(G.stats[p.k]+1,0,100); });
+  const repQ=perkSum('repQ'); if(repQ) G.rep=clamp(G.rep+repQ,0,100);
   if(fatigue>0) pushLog(`😖 Lo stile <b>${life.name}</b> ti logora da anni: <span class="bad">+${fatigue} stress</span>.`);
   if(habit>0) pushLog(`😪 Ti sei abituato al comfort: il sollievo scende a <b>${effStressQ>0?'+':''}${effStressQ}</b> stress/trim.`);
   if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
@@ -1560,7 +1609,7 @@ function tryPromotion(){
   G.salary=Math.max(G.salary, roleSalary(G.tier,G.level));
   if(G.level>=LEVELS.length-1){ winGame(); return true; }
   sfx('promote');
-  celebrate(`🎉 Promozione!`, `Ora sei <b>${LEVELS[G.level].t}</b> in ${G.company.n}. Stipendio: ${(G.salary/1000)}k/anno.`);
+  celebrate(`🎉 Promozione!`, `Ora sei <b>${LEVELS[G.level].t}</b> in ${G.company.n}. Stipendio: ${(G.salary/1000)}k/anno.`, showPerkChoice);
   pushLog(`<span class="gold">🎉 Promosso a ${LEVELS[G.level].t}!</span> Nuovo stipendio ${(G.salary/1000)}k.`);
   return true;
 }
@@ -1693,24 +1742,26 @@ function showJobMarket(){
 }
 
 function acceptOffer(o){
-  const oldCo=G.company.n;
-  G.company=o.company; G.tier=o.company.tier; G.level=o.level; G.salary=o.salary;
+  const oldCo=G.company.n, wasLevel=G.level;
+  const sal=Math.round(o.salary*(perkHas('ambizioso')?1.05:1)/500)*500;   // perk Ambizioso
+  G.company=o.company; G.tier=o.company.tier; G.level=o.level; G.salary=sal;
   G.monthsHere=0; G.blocked=false; G.blockedNotified=false;
   G.stress=clamp(G.stress+10,0,100); G.rep=clamp(G.rep-3,0,100);
   hideOverlay();
   if(G.stress>=100){ loseGame(); return; }
   if(G.level>=LEVELS.length-1){ winGame(); return; }
-  celebrate(`✍️ Nuovo capitolo!`, `Lasci ${oldCo} ed entri in ${companyLogo(o.company,15)} <b>${o.company.n}</b> come <b>${LEVELS[o.level].t}</b>.`);
-  pushLog(`<span class="gold">✍️ Cambio azienda:</span> da ${oldCo} a <b>${o.company.n}</b> come ${LEVELS[o.level].t} (${(o.salary/1000)}k).`);
+  celebrate(`✍️ Nuovo capitolo!`, `Lasci ${oldCo} ed entri in ${companyLogo(o.company,15)} <b>${o.company.n}</b> come <b>${LEVELS[o.level].t}</b>.`,
+    o.level>wasLevel ? showPerkChoice : null);
+  pushLog(`<span class="gold">✍️ Cambio azienda:</span> da ${oldCo} a <b>${o.company.n}</b> come ${LEVELS[o.level].t} (${(sal/1000)}k).`);
   makeObjective(); render();
 }
 
 /* ================= CELEBRATION / TOAST ================= */
-function celebrate(title, body){
+function celebrate(title, body, cb){
   const m=$("modal");
   m.innerHTML=`<div class="em" style="color:var(--gold)">${icon('spark',48)}</div><h2>${title}</h2><p class="body">${body}</p>
     <button class="btn block" id="okCel">Continua →</button>`;
-  m.querySelector("#okCel").onclick=()=>{ hideOverlay(); render(); };
+  m.querySelector("#okCel").onclick=()=>{ hideOverlay(); if(cb) cb(); else render(); };
   showOverlay();
 }
 let toastT=null;
