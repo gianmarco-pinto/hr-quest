@@ -1365,18 +1365,18 @@ function renderPromo(){
   if(!nx){ $("pNext").textContent="Sei al vertice"; $("pBar").style.width="100%"; $("pHint").textContent=""; return; }
   $("pNext").textContent="→ "+LEVELS[G.level+1].t;
   const reqs=reqEntries(nx);
+  const minQ=LEVELS[G.level].minQ||8;
   let ratios=[], missing=[];
   reqs.forEach(r=>{ ratios.push(clamp(G.stats[r.k]/r.v,0,1));
     if(G.stats[r.k]<r.v) missing.push(`${icon(STAT(r.k).ic,12)} ${Math.round(G.stats[r.k])}/${r.v}`); });
+  // Il tempo è un requisito come le competenze: sempre visibile e conteggiato nella barra.
+  ratios.push(clamp(G.monthsHere/minQ,0,1));
+  if(G.monthsHere<minQ) missing.push(`${icon('clock',12)} esperienza ${G.monthsHere}/${minQ} trim.`);
+  if(coQv()<2) missing.push(`${icon('calendar',12)} in ${G.company.n} da ${coQv()}/2 trim.`);
   $("pBar").style.width=Math.round(ratios.reduce((a,b)=>a+b,0)/ratios.length*100)+"%";
   const capped=(G.level+1)>TIERS[G.tier].maxLevel;
-  const minQ=LEVELS[G.level].minQ||8;
-  const timeOk=G.monthsHere>=minQ;
-  const settled=coQv()>=2;
   if(missing.length) $("pHint").innerHTML=`Ti manca: <b>${missing.join(" · ")}</b>`;
-  else if(!timeOk) $("pHint").innerHTML=`✅ Competenze pronte! Ti serve ancora esperienza nel ruolo: <b>${G.monthsHere}/${minQ} trimestri</b>.`;
-  else if(!settled) $("pHint").innerHTML=`✅ Sei pronto, ma sei appena arrivato in <b>${G.company.n}</b>: la promozione può scattare dopo <b>${coQv()}/2 trimestri</b> qui.`;
-  else if(capped) $("pHint").innerHTML=`✅ Sei pronto! Ma <b>${G.company.n}</b> è troppo piccola per questo ruolo: aspetta un'offerta da un'azienda più grande.`;
+  else if(capped) $("pHint").innerHTML=`✅ Sei pronto! Ma <b>${G.company.n}</b> è troppo piccola per questo ruolo: aspetta un'offerta o candidati da "Cerca lavoro".`;
   else $("pHint").innerHTML=`✅ Pronto per la promozione! Arriverà a fine trimestre.`;
 }
 
