@@ -749,9 +749,16 @@ function actView(a){
 }
 
 // End-of-month challenges. Options gated by competences (req scales with level). Always one fallback.
+// Le sfide sono versionate per fascia di ruolo come le attività: il testo base è la
+// versione "mid" (BP/Manager); v.jr e v.sr riscrivono titolo, scenario e opzioni
+// (ct: array di 3 etichette nello stesso ordine). Meccanica, requisiti ed effetti invariati.
 const CHALLENGES = [
   {sv:"ch_sciopero", h:"Sciopero indetto", tag:"Sindacale",
    body:"Le RSU minacciano uno sciopero che bloccherebbe la produzione. Tutti guardano te.",
+   v:{jr:{h:"Tensione sindacale", body:"Le RSU alzano la voce e il tuo responsabile ti porta al tavolo come supporto. C'è aria di sciopero.",
+        ct:["Prepari i dati che sbloccano la trattativa","Prepari il dossier legale per il responsabile","Suggerisci di cedere alle richieste"]},
+      sr:{h:"Vertenza su più sedi", body:"Sciopero in più sedi, i sindacati nazionali si muovono e la stampa osserva. La direzione vuole che chiuda tu.",
+        ct:["Guidi la trattativa con i sindacati nazionali","Imposti la strategia con i legali esterni","Cedi: accordo costoso ma rapido"]}},
    opts:[
      {ct:"Conduci il tavolo di trattativa", req:{k:"sin",v:24}, eff:{sin:4, rel:2, rep:4, stress:6}, res:"Accordo trovato: sciopero evitato."},
      {ct:"Inquadri tutto sul piano legale",  req:{k:"con",v:24}, eff:{con:4, rep:2, stress:7}, res:"Gestione formale, tensione ma tenuta."},
@@ -759,6 +766,10 @@ const CHALLENGES = [
    ]},
   {sv:"ch_licenziamento", h:"Licenziamento contestato", tag:"Contenzioso",
    body:"Un manager vuole licenziare un dipendente. Il rischio di causa è concreto.",
+   v:{jr:{h:"Un licenziamento delicato", body:"Ti chiedono di preparare le carte per un licenziamento contestato. Il rischio di causa è concreto.",
+        ct:["Prepari un'istruttoria impeccabile","Proponi un percorso conciliativo","Prepari le carte in fretta e speri bene"]},
+      sr:{h:"Uscita di un dirigente", body:"Va chiuso il rapporto con un dirigente di peso. In ballo cause milionarie e la reputazione dell'azienda.",
+        ct:["Blindi l'uscita con i legali","Negozi un'uscita consensuale riservata","Forzi la mano e speri bene"]}},
    opts:[
      {ct:"Prepari un dossier a prova di causa", req:{k:"con",v:26}, eff:{con:5, amm:2, rep:3, stress:7}, res:"Procedura blindata, nessuna causa."},
      {ct:"Gestisci con empatia e un accordo",   req:{k:"rel",v:24}, eff:{rel:4, rep:3, stress:4}, res:"Uscita consensuale, tutti salvano la faccia."},
@@ -766,6 +777,10 @@ const CHALLENGES = [
    ]},
   {sv:"ch_selezione", h:"Posizione critica scoperta", tag:"Selezione",
    body:"Un ruolo chiave è vacante e la linea preme per riempirlo subito.",
+   v:{jr:{h:"Ricerca urgente", body:"Il tuo responsabile ti affida una ricerca urgente: la linea preme e i CV buoni scarseggiano.",
+        ct:["Screening mirato e referral","Proponi una copertura interna temporanea","Passi il primo CV disponibile"]},
+      sr:{h:"Poltrona executive scoperta", body:"Si è dimesso un direttore chiave. Il CEO vuole una soluzione in fretta e il mercato lo sa già.",
+        ct:["Attivi head hunter e la tua rete","Ridisegni l'assetto per coprire il vuoto","Promuovi in fretta il primo interno disponibile"]}},
    opts:[
      {ct:"Attivi ricerca mirata e referral", req:{k:"sel",v:28}, eff:{sel:5, org:2, rep:3, stress:6}, res:"Candidato forte chiuso in tempi record."},
      {ct:"Riorganizzi i carichi nel frattempo", req:{k:"org",v:26}, eff:{org:5, rep:2, stress:5}, res:"Ponte organizzativo ben gestito."},
@@ -773,6 +788,10 @@ const CHALLENGES = [
    ]},
   {sv:"ch_ispezione", h:"Ispezione del lavoro", tag:"Amministrazione",
    body:"Arriva un'ispezione a sorpresa su contratti e buste paga.",
+   v:{jr:{h:"Ispezione a sorpresa", body:"Gli ispettori chiedono i documenti: tocca a te recuperare contratti e buste paga in giornata.",
+        ct:["Consegni pratiche in ordine perfetto","Coinvolgi il legale sui punti dubbi","Improvvisi con quello che trovi"]},
+      sr:{h:"Audit su tutte le sedi", body:"Un audit su contratti, payroll e appalti di tutte le sedi. La responsabilità finale è tua.",
+        ct:["Presenti una compliance impeccabile","Gestisci i rilievi con la strategia legale","Minimizzi e speri che passi"]}},
    opts:[
      {ct:"Presenti pratiche impeccabili", req:{k:"amm",v:28}, eff:{amm:5, rep:4, stress:5}, res:"Tutto in regola, ispezione superata."},
      {ct:"Ti fai assistere sul contenzioso", req:{k:"con",v:24}, eff:{con:3, amm:2, stress:6}, res:"Qualche rilievo ma nessuna sanzione grave."},
@@ -780,13 +799,21 @@ const CHALLENGES = [
    ]},
   {sv:"ch_reskilling", h:"Reskilling urgente", tag:"Formazione",
    body:"La direzione vuole riqualificare un intero reparto in tre mesi.",
+   v:{jr:{h:"Aule da far partire", body:"Serve riqualificare in fretta un team e a te tocca far funzionare il piano: aule, docenti, presenze.",
+        ct:["Organizzi un percorso fatto bene","Coinvolgi e motivi i colleghi","Compri corsi standard a catalogo"]},
+      sr:{h:"Trasformazione delle competenze", body:"Il piano industriale richiede di riqualificare centinaia di persone. Il board aspetta il tuo piano.",
+        ct:["Disegni un'academy su misura","Guidi il cambiamento con i manager","Appalti tutto a un fornitore esterno"]}},
    opts:[
      {ct:"Progetti un percorso su misura", req:{k:"for",v:26}, eff:{for:5, lea:2, rep:3, stress:5}, res:"Piano di reskilling apprezzato dai vertici."},
      {ct:"Motivi e guidi il cambiamento", req:{k:"lea",v:24}, eff:{lea:4, rel:2, rep:2, stress:5}, res:"Team a bordo, cambiamento accettato."},
      {ct:"Compri corsi standard a catalogo", req:null, eff:{rep:-2, stress:2}, res:"Soluzione generica, impatto modesto."},
    ]},
-  {sv:"ch_capo", h:"Scontro col tuo capo", tag:"Relazioni",
-   body:"Il tuo responsabile boccia la tua proposta davanti a tutti.",
+  {sv:"ch_capo", h:"Scontro con la direzione", tag:"Relazioni",
+   body:"Il direttore boccia il tuo progetto HR davanti al comitato.",
+   v:{jr:{h:"Scontro col tuo capo", body:"Il tuo responsabile boccia la tua proposta davanti a tutti.",
+        ct:["Ricuci il rapporto a quattr'occhi","Dimostri il valore con i risultati","Ingoi il rospo e vai avanti"]},
+      sr:{h:"Scontro nel board", body:"Il CEO smonta la tua strategia HR davanti al board al completo.",
+        ct:["Ricuci nell'uno-a-uno col CEO","Torni con dati e risultati alla prossima riunione","Ingoi il rospo e ti allinei"]}},
    opts:[
      {ct:"Ricuci il rapporto a quattr'occhi", req:{k:"rel",v:26}, eff:{rel:5, rep:3, stress:4}, res:"Fiducia ricostruita, alleanza rafforzata."},
      {ct:"Dimostri il valore con i risultati", req:{k:"lea",v:26}, eff:{lea:4, rep:2, stress:6}, res:"I fatti ti danno ragione."},
@@ -794,6 +821,10 @@ const CHALLENGES = [
    ]},
   {sv:"ch_reorg", h:"Riorganizzazione aziendale", tag:"Change",
    body:"Due reparti vanno fusi. Tocca a te guidare il processo senza rivolte.",
+   v:{jr:{h:"Fusione tra team", body:"Due team vengono fusi e ti chiedono di supportare il passaggio: comunicazioni, dati e tanta pazienza.",
+        ct:["Accompagni le persone nel passaggio","Prepari i dati per il confronto sindacale","Esegui le direttive e basta"]},
+      sr:{h:"Ristrutturazione aziendale", body:"La ristrutturazione tocca centinaia di persone e il piano porta la tua firma.",
+        ct:["Guidi la trasformazione con una visione","Chiudi prima l'accordo quadro coi sindacati","Imponi il piano dall'alto"]}},
    opts:[
      {ct:"Guidi il change con visione", req:{k:"lea",v:30}, eff:{lea:5, org:2, rep:4, stress:8}, res:"Transizione ordinata, morale tenuto."},
      {ct:"Blindi l'accordo con i sindacati", req:{k:"sin",v:26}, eff:{sin:5, rep:3, stress:7}, res:"Nessun conflitto sindacale."},
@@ -801,12 +832,21 @@ const CHALLENGES = [
    ]},
   {sv:"ch_clima", h:"Clima aziendale a picco", tag:"People",
    body:"L'ultima survey è pessima: l'engagement è ai minimi storici.",
+   v:{jr:{h:"Malumore nel team", body:"Nel tuo reparto l'umore è a terra e qualcuno pensa di andarsene. Te ne accorgi tu per primo.",
+        ct:["Raccogli i segnali e li porti in alto","Ascolti i colleghi uno a uno","Lasci correre, passerà"]},
+      sr:{h:"Engagement ai minimi storici", body:"La survey di gruppo è pessima e il dato è arrivato al board. Tutti aspettano la tua risposta.",
+        ct:["Lanci un piano d'ascolto su tutta l'azienda","Scendi in campo di persona nelle sedi","Rimandi al prossimo trimestre"]}},
    opts:[
      {ct:"Lanci un piano d'ascolto strutturato", req:{k:"org",v:28}, eff:{org:4, rel:2, rep:4, stress:6}, res:"Piano credibile, fiducia in ripresa."},
      {ct:"Metti al centro le persone, di persona", req:{k:"rel",v:26}, eff:{rel:5, rep:3, stress:5}, res:"Vicinanza percepita, il clima migliora."},
      {ct:"Rimandi al prossimo trimestre", req:null, eff:{rep:-4, stress:-2}, res:"Problema congelato, non risolto."},
    ]},
 ];
+// Vista della sfida per la fascia corrente (mid = testo base).
+function chView(ch){
+  const v=(ch.v && ch.v[bandOf(G.level)]) || {};
+  return { h:v.h||ch.h, body:v.body||ch.body, ct:v.ct||null };
+}
 
 const OBJ_REWARD = {rep:5, bank:700};
 
@@ -1285,20 +1325,22 @@ function challengeEff(o, ok){
 }
 
 function showChallenge(ch){
+  const cv=chView(ch);
   const m=$("modal");
-  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon(ch.sv,48)}</div><h2>${ch.h}</h2>
+  m.innerHTML=`<div class="em" style="color:var(--acc)">${icon(ch.sv,48)}</div><h2>${cv.h}</h2>
     <div class="tagline">Sfida · ${ch.tag}</div>
-    <p class="body">${ch.body}</p><div class="choices" id="chBox"></div>`;
+    <p class="body">${cv.body}</p><div class="choices" id="chBox"></div>`;
   const box=m.querySelector("#chBox");
-  ch.opts.forEach(o=>{
+  ch.opts.forEach((o,i)=>{
     const fallback=!o.req;
     const need = o.req ? scaledReq(o.req.v) : 0;
     const ok = fallback || G.stats[o.req.k] >= need;
+    const label = cv.ct ? cv.ct[i] : o.ct;
     const b=document.createElement("button"); b.className="choice"; b.disabled=!ok;
     let rq="";
     if(o.req) rq=`<div class="rq ${ok?'ok':'lock'}">${ok?'✓':'🔒'} richiede ${icon(STAT(o.req.k).ic,12)} ${STAT(o.req.k).name} ${need} · hai ${Math.round(G.stats[o.req.k])}</div>`;
     else rq=`<div class="rq" style="color:var(--dim2)">opzione base · sempre disponibile</div>`;
-    b.innerHTML=`<div class="ct">${o.ct}</div>${rq}<div class="fx">${fxTags(challengeEff(o,ok))}</div>`;
+    b.innerHTML=`<div class="ct">${label}</div>${rq}<div class="fx">${fxTags(challengeEff(o,ok))}</div>`;
     if(ok) b.onclick=()=>resolveChallenge(ch,o,fallback);
     box.appendChild(b);
   });
@@ -1309,7 +1351,7 @@ function resolveChallenge(ch, o, fallback){
   applyEff(challengeEff(o, !fallback));
   G.lastChallengeGood = !fallback;
   const cls = fallback ? "bad" : "good";
-  pushLog(`${icon(ch.sv,13)} <b>${ch.h}</b> — <span class="${cls}">${o.res}</span>`);
+  pushLog(`${icon(ch.sv,13)} <b>${chView(ch).h}</b> — <span class="${cls}">${o.res}</span>`);
   hideOverlay();
   if(G.stress>=100){ loseGame(); return; }
   afterChallenge();
