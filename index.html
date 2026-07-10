@@ -416,6 +416,12 @@
   .tutcard .tbtns{display:flex;gap:9px;margin-top:13px}
   .tutcard .tbtns .btn{flex:1;padding:11px;font-size:14px}
 
+  /* STILE DI LEADERSHIP (fine partita) */
+  .stylerow{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
+  .stylerow .k{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--dim);text-transform:uppercase;display:flex;align-items:center;gap:5px}
+  .stylerow .sv{font-size:20px;font-weight:900;margin-top:3px}
+  .stylerow .sd{font-size:12.5px;color:var(--dim);margin-top:2px;line-height:1.4}
+
   /* SHARE PANEL */
   .shprev{width:100%;border-radius:14px;border:1px solid var(--line);margin:2px 0 12px;display:block}
   .shgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -2004,6 +2010,15 @@ function resumeGame(){
   show("s-game"); render();
 }
 
+/* ================= STILE DI LEADERSHIP (doppia lettura: risultati vs integrità) ================= */
+function leadershipStyle(n){
+  const s=(n!=null)?n:(G.shortcuts||0);
+  if(s===0) return {k:"Integrità totale",  d:"In cima senza mai barare. Rarissimo.",       col:"#34d399"};
+  if(s<=2)  return {k:"Pragmatico",         d:"Qualche compromesso, ma la sostanza tiene.",  col:"#ffcf5c"};
+  if(s<=5)  return {k:"Opportunista",       d:"Più di una scorciatoia lungo la strada.",     col:"#ff9d4f"};
+  return               {k:"Spregiudicato",  d:"Il fine ha giustificato i mezzi. Per ora.",   col:"#ff6b6b"};
+}
+
 /* ================= SHARE CARD ================= */
 function shareSVG(r){
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -2012,7 +2027,7 @@ function shareSVG(r){
   let steps=(r.career||[]).slice();
   if(steps.length>7) steps=[steps[0], {gap:true}, ...steps.slice(-5)];
   const path=steps.map((e,i)=>{
-    const y=616+i*44, x=170+i*34;
+    const y=632+i*44, x=170+i*34;
     if(e.gap) return `<text x="${x}" y="${y}" font-family="${F}" font-size="29" font-weight="800" fill="#6b789e">···</text>`;
     return `<text x="${x}" y="${y}" font-family="${F}" font-size="29">
       <tspan fill="#ffcf5c" font-weight="800">Anno ${esc(e.y)}</tspan>
@@ -2042,9 +2057,10 @@ function shareSVG(r){
   <text x="540" y="228" text-anchor="middle" font-family="${F}" font-size="30" font-weight="800" fill="#9aa6cc" letter-spacing="6">HR QUEST · LA SCALATA</text>
   <text x="540" y="348" text-anchor="middle" font-family="${F}" font-size="108" font-weight="900" fill="url(#gold)">RANK ${esc(r.grade)}</text>
   <text x="540" y="428" text-anchor="middle" font-family="${F}" font-size="48" font-weight="800" fill="#eef1fb">${esc(r.name)} è HR Director!</text>
-  <text x="540" y="488" text-anchor="middle" font-family="${F}" font-size="36" font-weight="700" fill="#c7cfe8">in <tspan fill="#ffcf5c" font-weight="800">${esc(r.years)} anni</tspan> · <tspan fill="#ffcf5c" font-weight="800">${esc(r.scoreTxt)} pt</tspan>${r.rank?` · <tspan fill="#ffcf5c" font-weight="800">#${esc(r.rank)} al mondo</tspan>`:''}</text>
-  <line x1="160" y1="528" x2="920" y2="528" stroke="#2e3a63" stroke-width="2"/>
-  <text x="170" y="574" font-family="${F}" font-size="23" font-weight="800" fill="#6b789e" letter-spacing="4">IL PERCORSO DELLA SCALATA</text>
+  <text x="540" y="482" text-anchor="middle" font-family="${F}" font-size="36" font-weight="700" fill="#c7cfe8">in <tspan fill="#ffcf5c" font-weight="800">${esc(r.years)} anni</tspan> · <tspan fill="#ffcf5c" font-weight="800">${esc(r.scoreTxt)} pt</tspan>${r.rank?` · <tspan fill="#ffcf5c" font-weight="800">#${esc(r.rank)} al mondo</tspan>`:''}</text>
+  <text x="540" y="528" text-anchor="middle" font-family="${F}" font-size="30" font-weight="800" fill="${r.styleCol||'#ffcf5c'}">Stile di leadership: ${esc(r.style||'Pragmatico')}</text>
+  <line x1="160" y1="558" x2="920" y2="558" stroke="#2e3a63" stroke-width="2"/>
+  <text x="170" y="600" font-family="${F}" font-size="23" font-weight="800" fill="#6b789e" letter-spacing="4">IL PERCORSO DELLA SCALATA</text>
   ${path}
   <line x1="160" y1="928" x2="920" y2="928" stroke="#2e3a63" stroke-width="2"/>
   <text x="270" y="966" text-anchor="middle" font-family="${F}" font-size="22" font-weight="700" fill="#6b789e" letter-spacing="2">COMPETENZA</text>
@@ -2115,6 +2131,7 @@ function winGame(){
   else if(years<=12){grade="A";note="Percorso brillante e solido.";}
   else if(years<=15){grade="B";note="Traguardo pienamente meritato.";}
   else {grade="C";note="Ci è voluto tempo, ma ce l'hai fatta.";}
+  const lead=leadershipStyle();
   const card=$("endCard");
   card.innerHTML=`<div class="em" style="color:var(--gold)">${icon('trophy',60)}</div><div class="grade">RANK ${grade}</div>
     <h1>Sei HR Director!</h1>
@@ -2128,12 +2145,20 @@ function winGame(){
       <div class="b"><div class="k">⭐ Reputazione</div><div class="v">${Math.round(G.rep)}</div></div>
       <div class="b"><div class="k">🏢 Aziende</div><div class="v">Tier ${G.tier+1}/4</div></div>
     </div>
+    <div class="stylerow" style="border-color:${lead.col}55">
+      <div>
+        <div class="k">${icon('spark',14)} Stile di leadership</div>
+        <div class="sv" style="color:${lead.col}">${lead.k}</div>
+        <div class="sd">${lead.d} ${(G.shortcuts||0)>0?`· ${G.shortcuts} scorciatoi${G.shortcuts===1?'a':'e'}`:'· 0 scorciatoie'}</div>
+      </div>
+    </div>
     <div class="lbbanner" id="winBanner">${icon('trophy',18)} ${supaOn()?'Invio del punteggio in classifica…':`In classifica · <b>${fmtScore(lbScore(entry))} pt</b>`}</div>
     <button class="btn block" id="shareBtn" style="margin-bottom:10px">📤 Condividi il risultato</button>
     <button class="btn block ghost" id="lbView" style="margin-bottom:10px">${icon('trophy',15)} Vedi la classifica</button>
     <button class="btn block ghost" id="againBtn">🔁 Gioca ancora</button>`;
   window._lastResult={ name:entry.name, years:years.toFixed(1).replace('.',','), grade,
     scoreTxt:fmtScore(lbScore(entry)), rank:null, comp:compAvg, rep:entry.rep, bank:entry.bank,
+    shortcuts:(G.shortcuts||0), style:lead.k, styleCol:lead.col,
     career:(G.career && G.career.length ? G.career : [{y:Math.ceil(G.month/4), t:"HR Director", co:G.company.n}]).slice() };
   try{ localStorage.setItem('hrq_result', JSON.stringify(window._lastResult)); }catch(e){}
   let hl={ts:entry.ts};
