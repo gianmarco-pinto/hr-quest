@@ -841,7 +841,121 @@ const CHALLENGES = [
      {ct:"Metti al centro le persone, di persona", req:{k:"rel",v:26}, eff:{rel:5, rep:3, stress:5}, res:"Vicinanza percepita, il clima migliora."},
      {ct:"Rimandi al prossimo trimestre", req:null, eff:{rep:-4, stress:-2}, res:"Problema congelato, non risolto."},
    ]},
+  {sv:"ch_licenziamento", h:"Dimissioni a sorpresa", tag:"Retention",
+   body:"Una figura chiave si dimette e il suo direttore pretende che tu la trattenga.",
+   v:{jr:{h:"Un collega se ne va", body:"Un collega bravo del tuo reparto si dimette e il capo ti chiede di capire perché.",
+        ct:["Prepari un'exit interview seria","Gli parli e riporti cosa lo trattiene","Lo saluti e apri la ricerca"]},
+      sr:{h:"Fuga di talenti", body:"Tre figure chiave si dimettono in un mese. Il board vuole risposte e un piano di retention.",
+        ct:["Lanci un piano di retention strutturato","Tratti personalmente con i tre","Lasci andare e riorganizzi"]}},
+   opts:[
+     {ct:"Costruisci una proposta di crescita", req:{k:"org",v:26}, eff:{org:4, rel:2, rep:3, stress:5}, res:"Resta: ha visto un percorso, non solo soldi."},
+     {ct:"Negozi condizioni e controproposta", req:{k:"rel",v:26}, eff:{rel:4, rep:2, stress:5}, res:"Trattativa ben giocata, la persona resta."},
+     {ct:"Rilanci solo con un aumento", req:null, eff:{rep:-3, stress:3}, res:"Accetta i soldi, ma se ne andrà comunque presto."},
+   ]},
+  {sv:"contenzioso", h:"Segnalazione delicata", tag:"Etica",
+   body:"Arriva una segnalazione su comportamenti inappropriati di un manager di peso.",
+   v:{jr:{h:"Una confidenza pesante", body:"Un collega ti confida comportamenti inappropriati di un capo. Sa che tu sei delle HR.",
+        ct:["Documenti tutto e attivi i canali giusti","Lo accompagni a fare la segnalazione","Gli consigli di lasciar perdere"]},
+      sr:{h:"Caso etico nel management", body:"Una segnalazione tocca un dirigente vicino al CEO. Come la gestisci definisce la cultura aziendale.",
+        ct:["Apri un'indagine indipendente","Gestisci il caso con riservatezza e fermezza","Insabbi per quieto vivere"]}},
+   opts:[
+     {ct:"Avvii un'indagine formale e trasparente", req:{k:"con",v:26}, eff:{con:4, rep:5, stress:8}, res:"Procedura corretta: fiducia nelle HR rafforzata."},
+     {ct:"Gestisci con discrezione e ascolto", req:{k:"rel",v:26}, eff:{rel:4, rep:2, stress:6}, res:"Caso gestito, persone tutelate."},
+     {ct:"Minimizzi sperando si sgonfi", req:null, eff:{rep:-6, stress:4}, res:"La voce gira: la fiducia nelle HR si incrina."},
+   ]},
+  {sv:"risparmi", h:"Taglio del budget HR", tag:"Business",
+   body:"Il CFO vuole tagliare il budget HR del 30%. Hai una riunione per difenderlo.",
+   v:{jr:{h:"Tagli in vista", body:"Ti chiedono di preparare i numeri per difendere il budget HR dal taglio del CFO.",
+        ct:["Prepari un dossier di dati impeccabile","Aiuti il capo a costruire le alleanze","Consegni due slide e via"]},
+      sr:{h:"Scontro sul budget", body:"Il CFO propone al board un taglio del 30% al budget HR. Tocca a te difenderlo.",
+        ct:["Dimostri il ROI con i numeri","Costruisci alleanze prima della riunione","Accetti il taglio senza combattere"]}},
+   opts:[
+     {ct:"Difendi il budget con i dati", req:{k:"amm",v:26}, eff:{amm:4, rep:4, stress:6}, res:"Numeri alla mano, il taglio si ferma."},
+     {ct:"Ti muovi prima: alleanze coi manager", req:{k:"rel",v:24}, eff:{rel:4, rep:3, stress:5}, res:"La linea ti appoggia: budget salvo."},
+     {ct:"Accetti il taglio", req:null, eff:{rep:-4, stress:-2}, res:"Meno risorse per tutto l'anno."},
+   ]},
+  {sv:"stress", h:"Team in affanno", tag:"People",
+   body:"Il carico è esploso e il tuo team HR è al limite: errori, ritardi, nervi tesi.",
+   v:{jr:{h:"Acque agitate", body:"Il reparto è sotto pressione e i colleghi sfogano su di te, che sei il punto di riferimento HR.",
+        ct:["Riorganizzi le tue priorità e aiuti","Ascolti e fai da parafulmine","Ti chiudi nelle tue pratiche"]},
+      sr:{h:"Direzione HR al limite", body:"La tua direzione HR è in affanno cronico: turnover interno e burnout dietro l'angolo.",
+        ct:["Ridisegni carichi e priorità","Coaching individuale ai tuoi manager","Chiedi solo più sforzi a tutti"]}},
+   opts:[
+     {ct:"Ridistribuisci carichi e priorità", req:{k:"org",v:26}, eff:{org:4, rep:3, stress:5}, res:"Il lavoro torna sostenibile."},
+     {ct:"Sviluppi e motivi le persone", req:{k:"lea",v:26}, eff:{lea:4, rel:2, rep:2, stress:5}, res:"Il team ritrova energia e fiducia."},
+     {ct:"Spingi tutti a stringere i denti", req:null, eff:{rep:-3, stress:6}, res:"Regge per poco: malumore in crescita."},
+   ]},
+  {sv:"ch_selezione", h:"Talento conteso", tag:"Talent",
+   body:"Un competitor ha fatto un'offerta pesante a una delle tue persone migliori.",
+   v:{jr:{h:"Il collega corteggiato", body:"Sai che un collega chiave ha in mano un'offerta di un competitor. Il capo ancora non lo sa.",
+        ct:["Prepari una proposta di sviluppo da portare al capo","Ne parli con lui e capisci cosa cerca","Non dici nulla e aspetti"]},
+      sr:{h:"Guerra per i talenti", body:"Un competitor sta facendo offerte mirate ai tuoi migliori. Serve una risposta di sistema.",
+        ct:["Lanci un piano talenti con percorsi chiari","Incontri le persone chiave una a una","Aspetti di vedere chi se ne va"]}},
+   opts:[
+     {ct:"Percorso di crescita su misura", req:{k:"sel",v:28}, eff:{sel:4, org:2, rep:3, stress:5}, res:"Resta: il progetto vale più dell'aumento."},
+     {ct:"Investi in formazione dedicata", req:{k:"for",v:26}, eff:{for:4, rel:2, rep:2, stress:4}, res:"La crescita percepita batte l'offerta esterna."},
+     {ct:"Rilancio economico e basta", req:null, eff:{rep:-2, stress:3}, res:"Trattenuto a caro prezzo, per ora."},
+   ]},
+  {sv:"amministrazione", h:"Errore in busta paga", tag:"Ops",
+   body:"Un errore ha sbagliato le buste paga di mezzo reparto. Telefoni bollenti.",
+   v:{jr:{h:"Buste paga sbagliate", body:"L'errore è partito dal tuo ufficio: mezze buste paga sbagliate e colleghi furiosi al telefono.",
+        ct:["Ricontrolli tutto e correggi in giornata","Chiami uno a uno e spieghi","Aspetti che se ne accorga qualcun altro"]},
+      sr:{h:"Falla nel payroll", body:"Un errore di sistema ha sbagliato centinaia di cedolini. Rischio vertenze e danno d'immagine.",
+        ct:["Task force e correzione immediata","Comunicazione trasparente a tutti","Minimizzi e correggi in silenzio"]}},
+   opts:[
+     {ct:"Correggi subito con rigore", req:{k:"amm",v:26}, eff:{amm:4, rep:3, stress:6}, res:"Errore chiuso in 48 ore: fiducia recuperata."},
+     {ct:"Ci metti la faccia con le persone", req:{k:"rel",v:24}, eff:{rel:4, rep:2, stress:5}, res:"La trasparenza disinnesca la rabbia."},
+     {ct:"Correggi in silenzio e speri", req:null, eff:{rep:-4, stress:4}, res:"Qualcuno se n'è accorto: figuraccia."},
+   ]},
+  {sv:"sindacale", h:"Nuovo contratto nazionale", tag:"Sindacale",
+   body:"È uscito il nuovo CCNL: adeguamenti, arretrati e sindacati che vigilano.",
+   v:{jr:{h:"CCNL da applicare", body:"Nuovo contratto nazionale: a te tocca aggiornare tabelle, livelli e arretrati senza sbagliare.",
+        ct:["Applichi tutto con precisione","Chiedi un confronto con le RSU sui dubbi","Applichi il minimo e rimandi il resto"]},
+      sr:{h:"Rinnovo contrattuale", body:"Il nuovo CCNL impatta su costi e inquadramenti di tutta l'azienda. Sindacati e CFO ti guardano.",
+        ct:["Governi l'adeguamento in ogni dettaglio","Negozi l'armonizzazione con i sindacati","Rinvii tutto il possibile"]}},
+   opts:[
+     {ct:"Applichi l'adeguamento alla perfezione", req:{k:"amm",v:28}, eff:{amm:4, rep:3, stress:6}, res:"Adeguamento impeccabile, zero vertenze."},
+     {ct:"Armonizzi al tavolo con le RSU", req:{k:"sin",v:26}, eff:{sin:4, rel:2, rep:3, stress:6}, res:"Intesa trovata: applicazione serena."},
+     {ct:"Rimandi il più possibile", req:null, eff:{rep:-4, stress:4}, res:"Arretrati e diffide in arrivo."},
+   ]},
+  {sv:"organizzazione", h:"Digitalizzazione HR", tag:"Innovazione",
+   body:"L'azienda adotta un nuovo sistema HR digitale e il progetto è sulle tue spalle.",
+   v:{jr:{h:"Nuovo gestionale HR", body:"Arriva un nuovo software HR: a te il compito di caricare i dati e far funzionare tutto.",
+        ct:["Migri i dati con metodo","Aiuti i colleghi a usarlo","Impari solo il minimo indispensabile"]},
+      sr:{h:"Trasformazione digitale HR", body:"Il board ha approvato la digitalizzazione dei processi HR. Il progetto porta il tuo nome.",
+        ct:["Guidi l'implementazione end-to-end","Porti le persone a bordo con la formazione","Deleghi tutto al fornitore"]}},
+   opts:[
+     {ct:"Governi il progetto con metodo", req:{k:"org",v:28}, eff:{org:4, amm:2, rep:3, stress:6}, res:"Sistema live nei tempi: processi più snelli."},
+     {ct:"Accompagni le persone al cambiamento", req:{k:"for",v:24}, eff:{for:4, rel:2, rep:2, stress:5}, res:"Adozione alta: il digitale funziona davvero."},
+     {ct:"Lasci fare al fornitore", req:null, eff:{rep:-3, stress:3}, res:"Sistema zoppo e malumori diffusi."},
+   ]},
 ];
+// Eventi rari e memorabili (bassa probabilità).
+const RARE_CHALLENGES = [
+  {sv:"trophy", h:"Premio HR dell'anno", tag:"Evento raro",
+   body:"Una rivista di settore ti candida al premio HR dell'anno. Riflettori puntati.",
+   v:{jr:{h:"Giovane talento HR", body:"Un'associazione di settore ti segnala tra i giovani talenti HR dell'anno.",
+        ct:["Sali sul palco e ringrazi","Dedichi il premio al tuo team","Declini con discrezione"]},
+      sr:{h:"HR Director dell'anno", body:"Sei in cinquina come HR Director dell'anno. La platea è piena di head hunter.",
+        ct:["Tieni un discorso memorabile","Dedichi il premio alla tua squadra","Declini con eleganza"]}},
+   opts:[
+     {ct:"Accetti e parli davanti a tutti", req:{k:"rel",v:24}, eff:{rel:3, rep:8, stress:4}, res:"Standing ovation: il tuo nome gira ovunque."},
+     {ct:"Dedichi il premio al team", req:{k:"lea",v:24}, eff:{lea:3, rel:2, rep:6, stress:2}, res:"Gesto apprezzato: leader vero."},
+     {ct:"Declini con modestia", req:null, eff:{rep:2, stress:-3}, res:"Basso profilo: un po' di visibilità persa."},
+   ]},
+  {sv:"ch_reorg", h:"Fusione aziendale", tag:"Evento raro",
+   body:"La tua azienda si fonde con un concorrente: due culture, doppi ruoli, tanta paura.",
+   v:{jr:{h:"Arriva una fusione", body:"La tua azienda viene acquisita. Tra i corridoi gira il panico e le HR sono nell'occhio del ciclone.",
+        ct:["Ti rendi utile nell'integrazione","Fai da ponte tra i colleghi","Pensi solo a salvarti il posto"]},
+      sr:{h:"La grande fusione", body:"Fusione con il principale concorrente: l'integrazione delle persone la firmi tu.",
+        ct:["Disegni l'integrazione delle due culture","Blindi un accordo di garanzia coi sindacati","Lasci che decida la finanza"]}},
+   opts:[
+     {ct:"Guidi l'integrazione delle persone", req:{k:"lea",v:28}, eff:{lea:5, org:3, rep:6, stress:9}, res:"Integrazione riuscita: sei nella storia aziendale."},
+     {ct:"Metti in sicurezza gli accordi", req:{k:"sin",v:26}, eff:{sin:5, con:2, rep:4, stress:8}, res:"Tutele firmate: la paura rientra."},
+     {ct:"Subisci gli eventi", req:null, eff:{rep:-5, stress:8}, res:"Il caos ti travolge: occasione persa."},
+   ]},
+];
+function pickChallenge(){ return Math.random()<0.08 ? pick(RARE_CHALLENGES) : pick(CHALLENGES); }
 // Vista della sfida per la fascia corrente (mid = testo base).
 function chView(ch){
   const v=(ch.v && ch.v[bandOf(G.level)]) || {};
@@ -880,6 +994,17 @@ const IMPREVISTI = [
   {sv:"imp_boiler", t:"La caldaia si è guastata", min:500, max:1200, mkChoices:a=>[
     {ct:"La sostituisci",    cd:`−${eur(a)}`,               eff:{bank:-a},    res:"Casa di nuovo calda."},
     {ct:"Rimandi e ti copri",cd:`+9 ${icon('stress',11)}`,  eff:{stress:9},  res:"Un trimestre al freddo."}]},
+  {sv:"imp_car",   t:"Tagliando straordinario",  min:200, max:500},
+  {sv:"imp_tax",   t:"Conguaglio a debito",      min:250, max:700},
+  {sv:"imp_phone", t:"Abbonamenti dimenticati",  min:100, max:300},
+  {sv:"imp_win",   t:"Premio di produzione",     min:400, max:900,  gain:true},
+  {sv:"imp_win",   t:"Piccola eredità",          min:900, max:2000, gain:true},
+  {sv:"imp_family", t:"Matrimonio di un amico", min:250, max:600, mkChoices:a=>[
+    {ct:"Vai con un bel regalo",  cd:`−${eur(a)}`,                                   eff:{bank:-a},          res:"Weekend bellissimo, amicizia rinsaldata."},
+    {ct:"Ti inventi una scusa",   cd:`+6 ${icon('stress',11)} · −2 ${icon('reputazione',11)}`, eff:{stress:6, rep:-2}, res:"Risparmi, ma il senso di colpa ti insegue."}]},
+  {sv:"imp_boiler", t:"Infiltrazione in casa", min:400, max:1000, mkChoices:a=>[
+    {ct:"Fai riparare subito",    cd:`−${eur(a)}`,               eff:{bank:-a},   res:"Problema risolto alla radice."},
+    {ct:"Metti un secchio e rimandi", cd:`+8 ${icon('stress',11)}`, eff:{stress:8}, res:"La macchia si allarga, e anche il pensiero."}]},
 ];
 
 /* ================= STATE ================= */
@@ -1240,7 +1365,7 @@ function endMonth(){
   resolveImprevisto(rollImprevisto(), ()=>{
     settleQuarterFinances();
     if(G.stress>=100){ loseGame(); return; }
-    showChallenge(pick(CHALLENGES));
+    showChallenge(pickChallenge());
   });
 }
 
