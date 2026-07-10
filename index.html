@@ -298,6 +298,9 @@
   .choice .rq{font-size:11px;font-weight:800;margin-top:5px;display:inline-block}
   .choice .rq.ok{color:var(--green)}
   .choice .rq.lock{color:var(--red)}
+  .choice.short{background:linear-gradient(180deg,rgba(255,90,90,.09),rgba(255,90,90,.04));border-color:rgba(255,90,90,.32)}
+  .choice.short:not(:disabled):hover{border-color:var(--red)}
+  .choice.short .ct{color:#ff9a8a}
   .choice .fx{margin-top:6px}
   .cashline{text-align:center;font-size:13px;color:var(--dim);margin:0 0 14px;
     padding:9px 12px;border-radius:11px;background:rgba(255,207,92,.1);border:1px solid rgba(255,207,92,.28)}
@@ -621,6 +624,8 @@ const ICONS = {
   spark:'<path d="M12 3v3.4M12 17.6V21M3 12h3.4M17.6 12H21M6 6l2.4 2.4M18 6l-2.4 2.4M6 18l2.4-2.4M18 18l-2.4-2.4"/>',
   clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 1.9"/>',
   sound:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  warn:'<path d="M12 3.6 21 19.4H3z"/><path d="M12 9.8v4.4"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/>',
+  spy:'<circle cx="12" cy="12" r="9"/><path d="M4.5 10.5h15"/><circle cx="9" cy="13.5" r="1.8"/><circle cx="15" cy="13.5" r="1.8"/><path d="M10.8 13.5h2.4"/>',
   mute:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
   puzzle:'<path d="M9 4a1.5 1.5 0 0 1 3 0c0 .8.6 1.2 1.4 1H16v2.6c.2.8.7 1.4 1.5 1.4a1.5 1.5 0 0 1 0 3c-.8 0-1.3.6-1.5 1.4V20h-2.6c-.8-.2-1.4.4-1.4 1.2a1.5 1.5 0 0 1-3 0c0-.8-.6-1.4-1.4-1.2H4v-2.6C4.2 14.6 3.6 14 2.8 14a1.5 1.5 0 0 1 0-3c.8 0 1.4-.6 1.2-1.4V7h2.6C7.4 7.2 8 6.8 8 6"/>',
   // --- imprevisti (scenario) ---
@@ -1032,6 +1037,29 @@ function chView(ch){
   const v=(ch.v && ch.v[bandOf(G.level)]) || {};
   return { h:v.h||ch.h, body:v.body||ch.body, ct:v.ct||null };
 }
+// Scorciatoie: la 4ª via "sporca" a ogni sfida. Risolve la crisi subito (−stress, nessun danno)
+// ma costa reputazione e lascia un "sospetto" (G.taint) che può esplodere in uno scandalo.
+const SHORTCUT_EFF = {stress:-7, rep:-9};
+const SHORTCUTS = {
+  "Sciopero indetto":{ct:"Scarichi la tensione sui capireparto", res:"Crisi rientrata, ma qualcuno paga al posto tuo."},
+  "Licenziamento contestato":{ct:"Forzi l'uscita e fai pressione perché non parli", res:"Se ne va in silenzio, con un metodo che lascia il segno."},
+  "Dimissioni a sorpresa":{ct:"Screditi chi se ne va per non perderci la faccia", res:"Trattieni gli altri infangando chi parte."},
+  "Posizione critica scoperta":{ct:"Ti prendi il merito di una candidatura non tua", res:"Chiudi in fretta, con un merito che non è tuo."},
+  "Talento conteso":{ct:"Screditi il competitor per trattenere la persona", res:"La trattieni giocando sporco con chi la corteggia."},
+  "Ispezione del lavoro":{ct:"Fai sparire i documenti scomodi", res:"L'ispezione passa: polvere nascosta sotto il tappeto."},
+  "Errore in busta paga":{ct:"Dai la colpa dell'errore a un collaboratore", res:"Te la cavi lasciando che paghi un altro."},
+  "Nuovo contratto nazionale":{ct:"Applichi il minimo e speri che nessuno controlli", res:"Risparmi tempo, ma qualcuno ci rimette."},
+  "Reskilling urgente":{ct:"Gonfi i numeri del piano formativo", res:"Sulla carta un successo, nella realtà molto meno."},
+  "Digitalizzazione HR":{ct:"Ti intesti un progetto fatto dai consulenti", res:"Il merito è tuo sulla carta, non nei fatti."},
+  "Scontro con la direzione":{ct:"Dai la colpa del flop al tuo team", res:"Salvi la faccia scaricando il team davanti al capo."},
+  "Riorganizzazione aziendale":{ct:"Usi la riorganizzazione per far fuori un rivale", res:"Il rivale salta; qualcuno però ha capito il gioco."},
+  "Clima aziendale a picco":{ct:"Ritocchi la survey per farla sembrare migliore", res:"I numeri migliorano, il malessere no."},
+  "Segnalazione delicata":{ct:"Minimizzi la segnalazione e la lasci cadere", res:"Tutto tace, ma tu sai cosa hai scelto."},
+  "Taglio del budget HR":{ct:"Salvi il tuo budget sacrificando quello di un collega", res:"Il tuo reparto è salvo, quello del collega no."},
+  "Team in affanno":{ct:"Scarichi il sovraccarico sui più deboli del team", res:"Reggi il colpo spremendo chi non può dire di no."},
+  "Premio HR dell'anno":{ct:"Nel discorso ti prendi meriti non tuoi", res:"Applausi ora; qualcuno ricorda com'è andata davvero."},
+  "Fusione aziendale":{ct:"Salvi la tua posizione scaricando i tagli sugli altri", res:"Sopravvivi alla fusione, a spese di chi si fidava."},
+};
 
 const OBJ_REWARD = {rep:5, bank:700};
 
@@ -1090,7 +1118,7 @@ function newGame(name, offer){
     rep:5, stress:8, bank:1500,
     salary:offer.salary, level:0, tier:c.tier, company:c,
     ap:3, usedActs:[], log:[], monthsHere:0, coQ:0, blocked:false, blockedNotified:false,
-    career:[{y:1, t:LEVELS[0].t, co:c.n}],
+    career:[{y:1, t:LEVELS[0].t, co:c.n}], taint:0, shortcuts:0,
     objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0, perks:[],
   };
   pushLog(`Entri in ${companyLogo(c,14)} <b>${c.n}</b> come <b>${LEVELS[0].t}</b>. Che avventura cominci!`);
@@ -1553,6 +1581,15 @@ function settleQuarterFinances(){
   if(habit>0) pushLog(`😪 Ti sei abituato al comfort: il sollievo scende a <b>${effStressQ>0?'+':''}${effStressQ}</b> stress/trim.`);
   if(G.bank<0){ G.bank=0; G.stress=clamp(G.stress+3,0,100);
     pushLog(`<span class="bad">💸 Non arrivi a fine trimestre!</span> I conti in rosso ti stressano (+3).`); }
+  // Scandalo: le scorciatoie prima o poi vengono a galla. Più ne accumuli, più è probabile.
+  if((G.taint||0)>0 && Math.random() < G.taint*0.10){
+    const repHit=18+G.taint*4, cash=Math.round(G.salary/6);
+    G.rep=clamp(G.rep-repHit,0,100); G.stress=clamp(G.stress+12,0,100); G.bank=Math.max(0,G.bank-cash);
+    G.taint=Math.max(0,G.taint-1);
+    sfx('imprev');
+    pushLog(`<span class="bad">${icon('spy',13)} Una tua scorciatoia viene a galla!</span> Ti presenta il conto: −${repHit} reputazione, +12 stress, −${eur(cash)}.`);
+    toast("🕵️ Scandalo: la reputazione crolla","bad");
+  }
   pushLog(`💰 Trimestre: <b>${net>=0?'+':''}${eur(net)}</b> · stipendio ${eur(income)} − spese ${eur(expenses)} (${eur(stressExtra)} stress · stile ${life.name}).`);
 }
 
@@ -1631,7 +1668,25 @@ function showChallenge(ch){
     if(ok) b.onclick=()=>resolveChallenge(ch,o,fallback);
     box.appendChild(b);
   });
+  const sc=SHORTCUTS[ch.h];
+  if(sc){
+    const b=document.createElement("button"); b.className="choice short";
+    b.innerHTML=`<div class="ct">${icon('warn',13)} ${sc.ct}</div>
+      <div class="rq" style="color:var(--red)">scorciatoia · costa reputazione e lascia sospetti</div>
+      <div class="fx">${fxTags(SHORTCUT_EFF)}</div>`;
+    b.onclick=()=>resolveShortcut(ch,sc);
+    box.appendChild(b);
+  }
   showOverlay();
+}
+function resolveShortcut(ch, sc){
+  applyEff(SHORTCUT_EFF);
+  G.taint=(G.taint||0)+1; G.shortcuts=(G.shortcuts||0)+1;
+  G.lastChallengeGood=false;
+  sfx('imprev');
+  pushLog(`${icon(ch.sv,13)} <b>${chView(ch).h}</b> — <span class="bad">${sc.res}</span>`);
+  hideOverlay();
+  afterChallenge();
 }
 
 function resolveChallenge(ch, o, fallback){
