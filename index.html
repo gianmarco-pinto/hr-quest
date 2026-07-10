@@ -252,7 +252,11 @@
   .tag.ap{color:var(--gold);background:rgba(255,207,92,.12);letter-spacing:1px}
   .reqtag{font-size:10px;font-weight:800;margin-top:6px;color:var(--red)}
   .reqtag.met{color:var(--green)}
-  .endmonth{margin-top:16px}
+  .endmonth{margin-top:16px;padding:16px;font-size:16.5px;font-weight:800;color:#2b1c00;
+    background:linear-gradient(90deg,var(--orange),var(--gold));box-shadow:0 10px 30px rgba(255,157,79,.42)}
+  .endmonth:hover{filter:brightness(1.05)}
+  .endmonth.ready{animation:endpulse 1.25s infinite}
+  @keyframes endpulse{0%,100%{box-shadow:0 10px 30px rgba(255,157,79,.42)}50%{box-shadow:0 12px 42px rgba(255,207,92,.75)}}
 
   /* FEED */
   .feed{margin-top:18px}
@@ -369,6 +373,11 @@
   @media(min-width:560px){ .ctx{flex-direction:row} .ctx>.card{flex:1;min-width:0} }
   .promobtns{display:flex;gap:8px;margin:0 0 10px}
   .pathbtn{min-height:40px}
+  .sfxbtn{flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--panel2);
+    border:1px solid var(--line);color:var(--dim);display:grid;place-items:center;
+    align-self:flex-start;transition:.15s;padding:0}
+  .sfxbtn:hover{border-color:var(--acc);color:var(--txt)}
+  .sfxbtn.off{color:var(--dim2)}
   .stats{padding:12px 16px 6px;margin-bottom:10px}
   .stats>h3{margin-bottom:9px}
   .catgroup{margin-bottom:3px}
@@ -437,6 +446,7 @@
         <div class="m" id="hMonth">Trim. 1/4</div>
         <div id="hYear">Anno 1</div>
       </div>
+      <button class="sfxbtn" id="sfxBtn" aria-label="Attiva/disattiva suoni"></button>
     </div>
 
     <div class="card vitals">
@@ -493,7 +503,7 @@
     </div>
     <div class="acts" id="actList"></div>
 
-    <button class="btn block ghost endmonth" id="endBtn">Affronta la sfida di fine trimestre →</button>
+    <button class="btn block endmonth" id="endBtn">Affronta la sfida di fine trimestre →</button>
 
     <div class="feed">
       <h3>Diario di bordo</h3>
@@ -569,6 +579,8 @@ const ICONS = {
   trophy:'<path d="M7 4h10v3.5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4.2v1.8a3 3 0 0 0 3 3M17 5.5h2.8v1.8a3 3 0 0 1-3 3"/><path d="M12 12.5v4M9.5 20.5h5M10 16.5h4l.6 4h-5.2z"/>',
   spark:'<path d="M12 3v3.4M12 17.6V21M3 12h3.4M17.6 12H21M6 6l2.4 2.4M18 6l-2.4 2.4M6 18l2.4-2.4M18 18l-2.4-2.4"/>',
   clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 1.9"/>',
+  sound:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  mute:'<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
   puzzle:'<path d="M9 4a1.5 1.5 0 0 1 3 0c0 .8.6 1.2 1.4 1H16v2.6c.2.8.7 1.4 1.5 1.4a1.5 1.5 0 0 1 0 3c-.8 0-1.3.6-1.5 1.4V20h-2.6c-.8-.2-1.4.4-1.4 1.2a1.5 1.5 0 0 1-3 0c0-.8-.6-1.4-1.4-1.2H4v-2.6C4.2 14.6 3.6 14 2.8 14a1.5 1.5 0 0 1 0-3c.8 0 1.4-.6 1.2-1.4V7h2.6C7.4 7.2 8 6.8 8 6"/>',
   // --- imprevisti (scenario) ---
   imp_multa:'<path d="M12 3.5 21.5 20.5H2.5z"/><path d="M12 9.5v4.2"/><path d="M12 16.9v.1"/>',
@@ -607,6 +619,38 @@ function companyLogo(company, size=22){
     <g clip-path="url(#${id})"><rect x="1.5" y="1.5" width="21" height="21" fill="${c1}"/><path d="M1.5 23 L23 6.5 V23 Z" fill="${c2}"/></g>
     <text x="12" y="16.2" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="-apple-system,Segoe UI,Roboto,sans-serif">${ini}</text>
   </svg>`;
+}
+
+/* ===== Effetti sonori (Web Audio, sintetizzati, zero file) ===== */
+let _actx=null, sfxOn = (function(){ try{ return localStorage.getItem('hrq_sfx')!=='0'; }catch(e){ return true; } })();
+function audioCtx(){ if(!_actx){ try{ _actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return _actx; }
+function sfx(name){
+  if(!sfxOn) return;
+  const ctx=audioCtx(); if(!ctx) return;
+  if(ctx.state==='suspended'){ try{ ctx.resume(); }catch(e){} }
+  const t0=ctx.currentTime;
+  const tone=(f,at,d,type,g)=>{ const o=ctx.createOscillator(), ga=ctx.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    ga.gain.setValueAtTime(0.0001, t0+at);
+    ga.gain.exponentialRampToValueAtTime(g||0.06, t0+at+0.012);
+    ga.gain.exponentialRampToValueAtTime(0.0001, t0+at+d);
+    o.connect(ga).connect(ctx.destination); o.start(t0+at); o.stop(t0+at+d+0.03); };
+  switch(name){
+    case 'click':   tone(300,0,0.06,'triangle',0.03); break;
+    case 'action':  tone(520,0,0.09,'sine',0.05); tone(780,0.05,0.09,'sine',0.03); break;
+    case 'obj':     tone(660,0,0.1,'sine',0.06); tone(990,0.09,0.16,'sine',0.05); break;
+    case 'promote': [523,659,784,1047].forEach((f,i)=>tone(f,i*0.09,0.18,'triangle',0.06)); break;
+    case 'win':     [523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.12,0.45,'triangle',0.07)); break;
+    case 'lose':    [392,311,247,185].forEach((f,i)=>tone(f,i*0.14,0.34,'sawtooth',0.05)); break;
+    case 'offer':   tone(587,0,0.1,'sine',0.05); tone(880,0.1,0.18,'sine',0.05); break;
+    case 'imprev':  tone(200,0,0.14,'square',0.045); tone(150,0.1,0.16,'square',0.04); break;
+    case 'stress':  tone(150,0,0.22,'sawtooth',0.05); break;
+  }
+}
+function toggleSfx(){
+  sfxOn=!sfxOn; try{ localStorage.setItem('hrq_sfx', sfxOn?'1':'0'); }catch(e){}
+  if(sfxOn){ audioCtx(); sfx('click'); }
+  const b=document.getElementById('sfxBtn'); if(b){ b.innerHTML=icon(sfxOn?'sound':'mute',16); b.classList.toggle('off',!sfxOn); }
 }
 
 // Career ladder (alberatura). next = competences required for the NEXT role;
@@ -861,8 +905,9 @@ function initStaticIcons(){
   $("icRep").innerHTML=icon('reputazione',18);
   $("icBank").innerHTML=icon('risparmi',18);
   $("secIcon").innerHTML=icon('calendar',16);
-  $("pathBtn").innerHTML=`${icon('ladder',14)} Percorso`;
+  $("pathBtn").innerHTML=`${icon('ladder',14)} Sviluppo di carriera`;
   $("jobBtn").innerHTML=`${icon('offer',14)} Cerca lavoro`;
+  const sb=$("sfxBtn"); sb.innerHTML=icon(sfxOn?'sound':'mute',16); sb.classList.toggle('off',!sfxOn); sb.onclick=toggleSfx;
   $("jobBtn").onclick=showJobMarket;
 }
 
@@ -938,6 +983,7 @@ function render(){
     }
   });
   $("endBtn").textContent = G.ap>0 ? `Chiudi il trimestre e affronta la sfida →` : `Affronta la sfida di fine trimestre →`;
+  $("endBtn").classList.toggle('ready', G.ap<=0);
   $("jobBtn").classList.toggle('hot', !!G.blocked);
   renderStress(); renderLifestyle(); renderPromo(); renderObjective(); renderFeed();
   saveGame();
@@ -1013,6 +1059,7 @@ function doAction(a){
   if(money){ if(G.bank<money) return; G.bank-=money; }
   applyEff(a.eff, stressMult());
   G.usedActs.push(a.id); G.ap-=cost;
+  sfx('action');
   if(G.stress>=100){ loseGame(); return; }
   render();
 }
@@ -1076,7 +1123,7 @@ function evaluateObjective(){
   if(st.done){
     G.rep=clamp(G.rep+OBJ_REWARD.rep,0,100); G.bank+=OBJ_REWARD.bank;
     pushLog(`<span class="gold">🎯 Obiettivo del trimestre centrato!</span> +⭐${OBJ_REWARD.rep} reputazione, +${OBJ_REWARD.bank}€.`);
-    toast("🎯 Obiettivo centrato!","good");
+    toast("🎯 Obiettivo centrato!","good"); sfx('obj');
   } else {
     pushLog(`Obiettivo del trimestre mancato. Al prossimo!`);
   }
@@ -1133,6 +1180,7 @@ function settleQuarterFinances(){
 function resolveImprevisto(im, done){
   if(!im){ done(); return; }
   if(im.mkChoices){ showImprevistoChoice(im, done); return; }
+  sfx(im.gain?'obj':'imprev');
   if(im.gain){
     G.bank+=im.amt;
     pushLog(`<span class="good">${icon(im.sv,13)} ${im.t}:</span> +${eur(im.amt)}.`);
@@ -1149,6 +1197,7 @@ function resolveImprevisto(im, done){
 }
 
 function showImprevistoChoice(im, done){
+  sfx('imprev');
   const m=$("modal");
   const opts=im.mkChoices(im.amt);
   m.innerHTML=`<div class="em" style="color:var(--orange)">${icon(im.sv,46)}</div><h2>${im.t}</h2>
@@ -1238,6 +1287,7 @@ function tryPromotion(){
   G.level=target; G.monthsHere=0; G.blocked=false;
   G.salary=Math.max(G.salary, roleSalary(G.tier,G.level));
   if(G.level>=LEVELS.length-1){ winGame(); return true; }
+  sfx('promote');
   celebrate(`🎉 Promozione!`, `Ora sei <b>${LEVELS[G.level].t}</b> in ${G.company.n}. Stipendio: ${(G.salary/1000)}k/anno.`);
   pushLog(`<span class="gold">🎉 Promosso a ${LEVELS[G.level].t}!</span> Nuovo stipendio ${(G.salary/1000)}k.`);
   return true;
@@ -1290,6 +1340,7 @@ function offerCandidates(forNext){
 function showIncomingOffer(forNext){
   const offers=offerCandidates(forNext);
   if(!offers.length){ notifyIfCapped(); return; }
+  sfx('offer');
   const m=$("modal");
   const sub = forNext
     ? `La tua azienda non può promuoverti oltre, ma un'azienda più grande ti vuole come <b>${LEVELS[offers[0].level].t}</b>.`
@@ -1509,7 +1560,7 @@ function resumeGame(){
 }
 
 function winGame(){
-  hideOverlay(); clearSave();
+  hideOverlay(); clearSave(); sfx('win');
   const years=G.month/4, compAvg=avg(G.stats);
   const entry={name:(G.name||"Tu").slice(0,24), years:+years.toFixed(2), comp:compAvg, rep:Math.round(G.rep), bank:Math.round(G.bank), ts:Date.now()};
   let grade="B", note="Traguardo pienamente meritato.";
@@ -1546,7 +1597,7 @@ function winGame(){
 
 /* ================= LOSE (BURNOUT) ================= */
 function loseGame(){
-  hideOverlay(); clearSave();
+  hideOverlay(); clearSave(); sfx('lose');
   const years=(G.month/4).toFixed(1), compAvg=avg(G.stats);
   const card=$("endCard");
   card.innerHTML=`<div class="em" style="color:var(--red)">${icon('stress',60)}</div>
