@@ -1372,8 +1372,8 @@ function render(){
     if(a.cost){ const ct=$("cost-"+a.id); if(ct) ct.innerHTML=`${icon('stipendio',12)}${money.toLocaleString('it-IT')}€`; }
     const rt=$("req-"+a.id);
     if(rt){
-      if(locked) rt.className="reqtag", rt.innerHTML=`🔒 richiede ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${a.req.v} · hai ${Math.round(G.stats[a.req.k])}`;
-      else rt.className="reqtag met", rt.innerHTML=`✓ ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${a.req.v}`;
+      if(locked) rt.className="reqtag", rt.innerHTML=`🔒 richiede ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${actReqV(a)} · hai ${Math.round(G.stats[a.req.k])}`;
+      else rt.className="reqtag met", rt.innerHTML=`✓ ${icon(STAT(a.req.k).ic,12)} ${STAT(a.req.k).name} ${actReqV(a)}`;
     }
   });
   $("endBtn").textContent = G.ap>0 ? `Chiudi il trimestre e affronta la sfida →` : `Affronta la sfida di fine trimestre →`;
@@ -1466,7 +1466,12 @@ function pushLog(html){ G.log.push(html); }
 /* ================= ACTIONS ================= */
 // Higher stress → bigger malus on competence gains. 100 = burnout (game over).
 function stressMult(){ const s=G.stress; if(s>=90)return .5; if(s>=75)return .65; if(s>=60)return .8; if(s>=40)return .9; return 1; }
-function actionLocked(a){ return a.req && G.stats[a.req.k] < a.req.v; }
+// La soglia d'accesso di un'attività cresce con la fascia di ruolo: la variante junior
+// chiede il valore base, la middle di più, la senior ancora di più (coerente con la complessità).
+const REQ_BAND_STEP = 9;
+const bandIdx = lvl => lvl>=4 ? 2 : lvl>=2 ? 1 : 0;   // jr=0, mid=1, sr=2
+function actReqV(a){ return a.req ? a.req.v + bandIdx(G.level)*REQ_BAND_STEP : 0; }
+function actionLocked(a){ return a.req && G.stats[a.req.k] < actReqV(a); }
 // Vacation and other scaling costs grow with lifestyle (tenore di vita).
 function actionCost(a){ if(!a.cost) return 0; return a.costScales ? Math.round(a.cost*LIFESTYLES[G.lifestyle].costMul/50)*50 : a.cost; }
 
