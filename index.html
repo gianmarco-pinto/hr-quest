@@ -1075,7 +1075,7 @@ function newGame(name, offer){
     stats:{sel:8, for:5, org:6, amm:5, con:2, sin:2, lea:4, rel:6},
     rep:5, stress:8, bank:1500,
     salary:offer.salary, level:0, tier:c.tier, company:c,
-    ap:3, usedActs:[], log:[], monthsHere:0, blocked:false, blockedNotified:false,
+    ap:3, usedActs:[], log:[], monthsHere:0, coQ:0, blocked:false, blockedNotified:false,
     objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0, perks:[],
   };
   pushLog(`Entri in ${companyLogo(c,14)} <b>${c.n}</b> come <b>${LEVELS[0].t}</b>. Che avventura cominci!`);
@@ -1090,6 +1090,8 @@ const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const avg = s => Math.round(STATS.reduce((t,st)=>t+s[st.k],0)/STATS.length);
 const reqEntries = nx => nx ? Object.keys(nx).map(k=>({k, v:nx[k]})) : [];
 function eur(n){ return n.toLocaleString('it-IT')+'€'; }
+// Trimestri nell'azienda corrente (fallback ai vecchi salvataggi senza coQ).
+const coQv = ()=> (G && G.coQ!=null) ? G.coQ : (G ? G.monthsHere : 0);
 const scaledReq = base => Math.max(6, base + G.level*3 + perkSum('chReq'));   // soglie sfide: crescono col ruolo, il perk Negoziatore le riduce
 function makeCompany(tier){ return {...pick(COMPANIES[tier]), tier, ...TIERS[tier]}; }
 
@@ -1368,8 +1370,10 @@ function renderPromo(){
   const capped=(G.level+1)>TIERS[G.tier].maxLevel;
   const minQ=LEVELS[G.level].minQ||8;
   const timeOk=G.monthsHere>=minQ;
+  const settled=coQv()>=2;
   if(missing.length) $("pHint").innerHTML=`Ti manca: <b>${missing.join(" · ")}</b>`;
   else if(!timeOk) $("pHint").innerHTML=`✅ Competenze pronte! Ti serve ancora esperienza nel ruolo: <b>${G.monthsHere}/${minQ} trimestri</b>.`;
+  else if(!settled) $("pHint").innerHTML=`✅ Sei pronto, ma sei appena arrivato in <b>${G.company.n}</b>: la promozione può scattare dopo <b>${coQv()}/2 trimestri</b> qui.`;
   else if(capped) $("pHint").innerHTML=`✅ Sei pronto! Ma <b>${G.company.n}</b> è troppo piccola per questo ruolo: aspetta un'offerta da un'azienda più grande.`;
   else $("pHint").innerHTML=`✅ Pronto per la promozione! Arriverà a fine trimestre.`;
 }
@@ -1604,7 +1608,7 @@ function resolveChallenge(ch, o, fallback){
 }
 
 function afterChallenge(){
-  G.month++; G.monthsHere++; G.ap=3; G.usedActs=[];
+  G.month++; G.monthsHere++; G.coQ=coQv()+1; G.ap=3; G.usedActs=[];
   if(G.stress>=95) pushLog(`<span class="bad">🥵 Sei al limite del burnout.</span> Le prestazioni ne risentono: pensa a staccare.`);
   evaluateObjective();
   const promoted=tryPromotion();
@@ -1620,7 +1624,8 @@ function meetsReq(nx){ if(!nx) return false; return reqEntries(nx).every(r=>G.st
 function tryPromotion(){
   const nx=LEVELS[G.level].next;
   if(!nx) return false;
-  const ready = meetsReq(nx) && G.monthsHere >= (LEVELS[G.level].minQ||8);   // competences + ~2 years in role
+  // Competenze + esperienza nel ruolo + almeno 2 trimestri nell'azienda corrente
+  const ready = meetsReq(nx) && G.monthsHere >= (LEVELS[G.level].minQ||8) && coQv() >= 2;
   if(!ready){ G.blocked=false; return false; }
   const target=G.level+1;
   if(target>TIERS[G.tier].maxLevel){ G.blocked=true; return false; }
@@ -1665,7 +1670,7 @@ function checkOffers(){
   // Se sei bloccato dal tetto, l'offerta per crescere appare direttamente (accetta / resta).
   if(cappedReady){ showIncomingOffer(true); return; }
   // Altrimenti la reputazione attira i cacciatori di teste, ogni tanto.
-  if(G.rep>=40 && G.monthsHere>=3 && Math.random()<0.16){ showIncomingOffer(false); return; }
+  if(G.rep>=40 && coQv()>=3 && Math.random()<0.16){ showIncomingOffer(false); return; }
 }
 // Candidati per un'offerta spontanea: solo ruoli per cui il giocatore è già qualificato.
 function offerCandidates(forNext){
@@ -1764,7 +1769,9 @@ function acceptOffer(o){
   const oldCo=G.company.n, wasLevel=G.level;
   const sal=Math.round(o.salary*(perkHas('ambizioso')?1.05:1)/500)*500;   // perk Ambizioso
   G.company=o.company; G.tier=o.company.tier; G.level=o.level; G.salary=sal;
-  G.monthsHere=0; G.blocked=false; G.blockedNotified=false;
+  // L'esperienza nel ruolo ti segue: si azzera solo se il ruolo cambia.
+  if(o.level>wasLevel) G.monthsHere=0;
+  G.coQ=0; G.blocked=false; G.blockedNotified=false;
   G.stress=clamp(G.stress+10,0,100); G.rep=clamp(G.rep-3,0,100);
   hideOverlay();
   if(G.stress>=100){ loseGame(); return; }
