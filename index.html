@@ -1145,14 +1145,26 @@ $("introBadge").innerHTML=icon('avatar',58,'introico');
 $("introLbBtn").onclick=()=>showLeaderboard();
 $("resumeBtn").onclick=resumeGame;
 (function initResume(){
-  const s=loadSave();
+  let s=loadSave();
+  // Bonifica: salvataggi di partite già concluse (vittoria = livello massimo) non si riprendono.
+  if(s && (s.over || s.level>=LEVELS.length-1)){ clearSave(); s=null; }
   if(s && s.month && s.company){
     const y=Math.floor((s.month-1)/4)+1, q=(s.month-1)%4+1;
     $("resumeBtn").innerHTML=`<span style="display:block;line-height:1.3;text-align:center">▶ Riprendi la partita<br><span style="font-weight:600;font-size:12.5px;opacity:.92">${LEVELS[s.level].t} · ${s.company.n} · Anno ${y}, Trim. ${q}</span></span>`;
     $("resumeWrap").style.display="block";
     $("startBtn").textContent="Nuova partita →";
     $("startBtn").className="btn ghost";
+    return;
   }
+  // Nessuna partita in corso: se c'è una vittoria passata, offri di rivedere il badge.
+  try{
+    const r=JSON.parse(localStorage.getItem('hrq_result')||'null');
+    if(r && r.grade){
+      $("resumeBtn").innerHTML=`<span style="display:block;line-height:1.3;text-align:center">🏆 Rivedi il tuo badge<br><span style="font-weight:600;font-size:12.5px;opacity:.92">HR Director in ${r.years} anni · Rank ${r.grade}</span></span>`;
+      $("resumeBtn").onclick=()=>{ window._lastResult=r; shareResult(); };
+      $("resumeWrap").style.display="block";
+    }
+  }catch(e){}
 })();
 $("startBtn").onclick = () => {
   window._name = $("nameInput").value.trim() || "Alex";
@@ -1629,6 +1641,7 @@ function afterChallenge(){
   if(G.stress>=95) pushLog(`<span class="bad">🥵 Sei al limite del burnout.</span> Le prestazioni ne risentono: pensa a staccare.`);
   evaluateObjective();
   const promoted=tryPromotion();
+  if(G.over) return;                 // vittoria/burnout: non proseguire il trimestre (né risalvare)
   if(!promoted) checkOffers();
   G.lastChallengeGood=null;
   makeObjective();
@@ -1917,11 +1930,12 @@ async function submitScore(entry){
 }
 
 /* ================= SAVE / RESUME (partita in corso) ================= */
-function saveGame(){ if(!G) return; try{ localStorage.setItem('hrq_save', JSON.stringify({...G, log:(G.log||[]).slice(-30)})); }catch(e){} }
+function saveGame(){ if(!G || G.over) return; try{ localStorage.setItem('hrq_save', JSON.stringify({...G, log:(G.log||[]).slice(-30)})); }catch(e){} }
 function loadSave(){ try{ return JSON.parse(localStorage.getItem('hrq_save')||'null'); }catch(e){ return null; } }
 function clearSave(){ try{ localStorage.removeItem('hrq_save'); }catch(e){} }
 function resumeGame(){
   const s=loadSave(); if(!s) return;
+  if(s.over || s.level>=LEVELS.length-1){ clearSave(); return; }   // partita già conclusa
   G=s;
   initStaticIcons(); buildStatSkeleton(); buildActions();
   show("s-game"); render();
@@ -2029,6 +2043,7 @@ async function shareResult(){
 }
 
 function winGame(){
+  G.over=true;                       // partita conclusa: blocca ogni salvataggio successivo
   hideOverlay(); clearSave(); sfx('win');
   const years=G.month/4, compAvg=avg(G.stats);
   const entry={name:(G.name||"Tu").slice(0,24), years:+years.toFixed(2), comp:compAvg, rep:Math.round(G.rep), bank:Math.round(G.bank), ts:Date.now()};
@@ -2057,6 +2072,7 @@ function winGame(){
   window._lastResult={ name:entry.name, years:years.toFixed(1).replace('.',','), grade,
     scoreTxt:fmtScore(lbScore(entry)), rank:null, comp:compAvg, rep:entry.rep, bank:entry.bank,
     career:(G.career && G.career.length ? G.career : [{y:Math.ceil(G.month/4), t:"HR Director", co:G.company.n}]).slice() };
+  try{ localStorage.setItem('hrq_result', JSON.stringify(window._lastResult)); }catch(e){}
   let hl={ts:entry.ts};
   card.querySelector("#shareBtn").onclick=shareResult;
   card.querySelector("#lbView").onclick=()=>showLeaderboard(hl);
@@ -2064,7 +2080,8 @@ function winGame(){
   show("s-end");
   submitScore(entry).then(res=>{
     if(res.id!=null) hl={id:res.id};
-    if(window._lastResult){ window._lastResult.rank=res.rank; window._lastResult.scoreTxt=fmtScore(res.score); }
+    if(window._lastResult){ window._lastResult.rank=res.rank; window._lastResult.scoreTxt=fmtScore(res.score);
+      try{ localStorage.setItem('hrq_result', JSON.stringify(window._lastResult)); }catch(e){} }
     const b=$("winBanner");
     if(b) b.innerHTML=`${icon('trophy',18)} Sei <b>#${res.rank}</b> in classifica · <b>${fmtScore(res.score)} pt</b>`;
   }).catch(()=>{});
@@ -2072,6 +2089,7 @@ function winGame(){
 
 /* ================= LOSE (BURNOUT) ================= */
 function loseGame(){
+  G.over=true;                       // partita conclusa: blocca ogni salvataggio successivo
   hideOverlay(); clearSave(); sfx('lose');
   const years=(G.month/4).toFixed(1), compAvg=avg(G.stats);
   const card=$("endCard");
