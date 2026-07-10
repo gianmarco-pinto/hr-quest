@@ -1107,6 +1107,9 @@ const reqEntries = nx => nx ? Object.keys(nx).map(k=>({k, v:nx[k]})) : [];
 function eur(n){ return n.toLocaleString('it-IT')+'€'; }
 // Trimestri nell'azienda corrente (fallback ai vecchi salvataggi senza coQ).
 const coQv = ()=> (G && G.coQ!=null) ? G.coQ : (G ? G.monthsHere : 0);
+// Reputazione: risorsa scarsa. Erode verso una baseline e fa da requisito per salire.
+const REP_BASE = 30;                                   // sopra questa soglia la reputazione erode di 1/trim
+const repNeed = lvl => [22,26,30,36,42][lvl] || 30;    // reputazione minima per la promozione dal ruolo lvl
 const scaledReq = base => Math.max(6, base + G.level*3 + perkSum('chReq'));   // soglie sfide: crescono col ruolo, il perk Negoziatore le riduce
 function makeCompany(tier){ return {...pick(COMPANIES[tier]), tier, ...TIERS[tier]}; }
 
@@ -1400,6 +1403,9 @@ function renderPromo(){
   ratios.push(clamp(G.monthsHere/minQ,0,1));
   if(G.monthsHere<minQ) missing.push(`${icon('clock',12)} esperienza ${G.monthsHere}/${minQ} trim.`);
   if(coQv()<2) missing.push(`${icon('calendar',12)} in ${G.company.n} da ${coQv()}/2 trim.`);
+  const needRep=repNeed(G.level);
+  ratios.push(clamp(G.rep/needRep,0,1));
+  if(G.rep<needRep) missing.push(`${icon('reputazione',12)} reputazione ${Math.round(G.rep)}/${needRep}`);
   $("pBar").style.width=Math.round(ratios.reduce((a,b)=>a+b,0)/ratios.length*100)+"%";
   const capped=(G.level+1)>TIERS[G.tier].maxLevel;
   if(missing.length) $("pHint").innerHTML=`Ti manca: <b>${missing.join(" · ")}</b>`;
@@ -1529,6 +1535,8 @@ function settleQuarterFinances(){
   const net=income-expenses;
   G.bank+=net;
 
+  // Reputazione: erode verso la baseline (sei bravo quanto il tuo ultimo trimestre): va coltivata.
+  if(G.rep>REP_BASE) G.rep=clamp(G.rep-2,0,100);
   // Lifestyle: reputation, passive stress, and fatigue if a poor lifestyle is held too long.
   G.rep=clamp(G.rep+life.repQ,0,100);
   G.poorStreak = life.poor ? G.poorStreak+1 : 0;
@@ -1654,8 +1662,8 @@ function meetsReq(nx){ if(!nx) return false; return reqEntries(nx).every(r=>G.st
 function tryPromotion(){
   const nx=LEVELS[G.level].next;
   if(!nx) return false;
-  // Competenze + esperienza nel ruolo + almeno 2 trimestri nell'azienda corrente
-  const ready = meetsReq(nx) && G.monthsHere >= (LEVELS[G.level].minQ||8) && coQv() >= 2;
+  // Competenze + esperienza nel ruolo + almeno 2 trimestri nell'azienda + reputazione sufficiente
+  const ready = meetsReq(nx) && G.monthsHere >= (LEVELS[G.level].minQ||8) && coQv() >= 2 && G.rep >= repNeed(G.level);
   if(!ready){ G.blocked=false; return false; }
   const target=G.level+1;
   if(target>TIERS[G.tier].maxLevel){ G.blocked=true; return false; }
