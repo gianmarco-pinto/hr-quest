@@ -374,8 +374,11 @@
   .catgroup{margin-bottom:3px}
   .stat{margin-bottom:8px}
   @media(min-width:560px){
-    .stats .catgroup{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
-    .stats .cathead{grid-column:1 / -1}
+    #statList{display:grid;grid-template-columns:1fr 1fr;column-gap:26px}
+    .catgroup.hard{grid-column:1;grid-row:1}
+    .catgroup.soft{grid-column:2;grid-row:1}
+    .catgroup.man{grid-column:1 / -1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;column-gap:26px}
+    .catgroup.man .cathead{grid-column:1 / -1}
     .stats .stat .nm{width:96px}
   }
   .obj{padding:11px 14px;margin-bottom:12px}
@@ -866,7 +869,7 @@ function initStaticIcons(){
 function buildStatSkeleton(){
   const list=$("statList"); list.innerHTML="";
   ["soft","hard","man"].forEach(cat=>{
-    const g=document.createElement("div"); g.className="catgroup";
+    const g=document.createElement("div"); g.className="catgroup "+cat;
     g.innerHTML=`<div class="cathead" style="color:${CATS[cat].col}"><i style="background:${CATS[cat].col}"></i>${CATS[cat].name}</div>`;
     STATS.filter(s=>s.cat===cat).forEach(s=>{
       const row=document.createElement("div"); row.className="stat";
