@@ -413,6 +413,20 @@
   .tutcard .tbtns{display:flex;gap:9px;margin-top:13px}
   .tutcard .tbtns .btn{flex:1;padding:11px;font-size:14px}
 
+  /* SHARE PANEL */
+  .shprev{width:100%;border-radius:14px;border:1px solid var(--line);margin:2px 0 12px;display:block}
+  .shgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .shbtn{padding:12px;border-radius:12px;font-weight:800;font-size:14px;color:#fff;border:none;
+    min-height:44px;transition:transform .1s,filter .15s;font-family:inherit}
+  .shbtn:hover{filter:brightness(1.1)}
+  .shbtn:active{transform:scale(.97)}
+  .shbtn.li{background:#0a66c2}
+  .shbtn.wa{background:#1faa53}
+  .shbtn.xx{background:#1b1f2d;border:1px solid var(--line)}
+  .shbtn.dl{background:var(--panel2);border:1px solid var(--line);color:var(--txt)}
+  .shbtn.nat{background:var(--panel2);border:1px solid var(--line);color:var(--txt);grid-column:1 / -1}
+  .shnote{font-size:11.5px;color:var(--dim);text-align:center;margin-top:10px;line-height:1.45}
+
   /* PERK CHIPS */
   #perkChips{display:inline-flex;gap:6px;flex-wrap:wrap;margin-left:8px;vertical-align:middle}
   .pchip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
@@ -1076,6 +1090,7 @@ function newGame(name, offer){
     rep:5, stress:8, bank:1500,
     salary:offer.salary, level:0, tier:c.tier, company:c,
     ap:3, usedActs:[], log:[], monthsHere:0, coQ:0, blocked:false, blockedNotified:false,
+    career:[{y:1, t:LEVELS[0].t, co:c.n}],
     objective:null, lastChallengeGood:null, lifestyle:1, poorStreak:0, comfortStreak:0, perks:[],
   };
   pushLog(`Entri in ${companyLogo(c,14)} <b>${c.n}</b> come <b>${LEVELS[0].t}</b>. Che avventura cominci!`);
@@ -1632,6 +1647,7 @@ function tryPromotion(){
   const target=G.level+1;
   if(target>TIERS[G.tier].maxLevel){ G.blocked=true; return false; }
   G.level=target; G.monthsHere=0; G.blocked=false;
+  (G.career=G.career||[]).push({y:Math.floor((G.month-1)/4)+1, t:LEVELS[G.level].t, co:G.company.n});
   G.salary=Math.max(G.salary, roleSalary(G.tier,G.level));
   if(G.level>=LEVELS.length-1){ winGame(); return true; }
   sfx('promote');
@@ -1774,6 +1790,7 @@ function acceptOffer(o){
   // L'esperienza nel ruolo ti segue: si azzera solo se il ruolo cambia.
   if(o.level>wasLevel) G.monthsHere=0;
   G.coQ=0; G.blocked=false; G.blockedNotified=false;
+  (G.career=G.career||[]).push({y:Math.floor((G.month-1)/4)+1, t:LEVELS[G.level].t, co:G.company.n});
   G.stress=clamp(G.stress+10,0,100); G.rep=clamp(G.rep-3,0,100);
   hideOverlay();
   if(G.stress>=100){ loseGame(); return; }
@@ -1914,9 +1931,17 @@ function resumeGame(){
 function shareSVG(r){
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   const F='-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
-  const stat=(x,label,value)=>`
-    <text x="${x}" y="800" text-anchor="middle" font-family="${F}" font-size="26" font-weight="700" fill="#6b789e" letter-spacing="2">${label}</text>
-    <text x="${x}" y="852" text-anchor="middle" font-family="${F}" font-size="42" font-weight="800" fill="#eef1fb">${value}</text>`;
+  // Percorso di carriera: max 7 tappe (se di più: prima + ultime 5), indent a "scalata".
+  let steps=(r.career||[]).slice();
+  if(steps.length>7) steps=[steps[0], {gap:true}, ...steps.slice(-5)];
+  const path=steps.map((e,i)=>{
+    const y=616+i*44, x=170+i*34;
+    if(e.gap) return `<text x="${x}" y="${y}" font-family="${F}" font-size="29" font-weight="800" fill="#6b789e">···</text>`;
+    return `<text x="${x}" y="${y}" font-family="${F}" font-size="29">
+      <tspan fill="#ffcf5c" font-weight="800">Anno ${esc(e.y)}</tspan>
+      <tspan fill="#eef1fb" font-weight="800"> · ${esc(e.t)}</tspan>
+      <tspan fill="#9aa6cc" font-weight="600"> — ${esc(e.co)}</tspan></text>`;
+  }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d8bff"/><stop offset="1" stop-color="#9d6bff"/></linearGradient>
@@ -1927,7 +1952,7 @@ function shareSVG(r){
   <rect width="1080" height="1080" fill="#0e1220"/>
   <circle cx="920" cy="100" r="480" fill="url(#gl1)"/>
   <circle cx="120" cy="1000" r="480" fill="url(#gl2)"/>
-  <g transform="translate(465,80) scale(6.25)">
+  <g transform="translate(480,52) scale(5)">
     <rect width="24" height="24" rx="5.4" fill="url(#tile)"/>
     <g transform="translate(1.25,1.5)">
       <g fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -1937,16 +1962,22 @@ function shareSVG(r){
       <path d="M11.3 6.9 L11.95 4.4 L13.2 5.8 L14.1 4 L15 5.8 L16.25 4.4 L16.9 6.9 Z" fill="#ffcf5c"/>
     </g>
   </g>
-  <text x="540" y="300" text-anchor="middle" font-family="${F}" font-size="38" font-weight="800" fill="#9aa6cc" letter-spacing="6">HR QUEST · LA SCALATA</text>
-  <text x="540" y="452" text-anchor="middle" font-family="${F}" font-size="150" font-weight="900" fill="url(#gold)">RANK ${esc(r.grade)}</text>
-  <text x="540" y="560" text-anchor="middle" font-family="${F}" font-size="56" font-weight="800" fill="#eef1fb">${esc(r.name)} è HR Director!</text>
-  <text x="540" y="650" text-anchor="middle" font-family="${F}" font-size="46" font-weight="700" fill="#c7cfe8">in <tspan fill="#ffcf5c" font-weight="800">${esc(r.years)} anni</tspan> · <tspan fill="#ffcf5c" font-weight="800">${esc(r.scoreTxt)} pt</tspan>${r.rank?` · <tspan fill="#ffcf5c" font-weight="800">#${esc(r.rank)} al mondo</tspan>`:''}</text>
-  <line x1="180" y1="730" x2="900" y2="730" stroke="#2e3a63" stroke-width="2"/>
-  ${stat(270,'COMPETENZA', r.comp+'/100')}
-  ${stat(540,'REPUTAZIONE', r.rep)}
-  ${stat(810,'RISPARMI', Math.round(r.bank/1000)+'k€')}
-  <text x="540" y="960" text-anchor="middle" font-family="${F}" font-size="38" font-weight="800" fill="#8f9dff">Prova a battermi → hrquest-g2v.vercel.app</text>
-  <text x="540" y="1022" text-anchor="middle" font-family="${F}" font-size="28" font-weight="600" fill="#6b789e">Powered by game2value</text>
+  <text x="540" y="228" text-anchor="middle" font-family="${F}" font-size="30" font-weight="800" fill="#9aa6cc" letter-spacing="6">HR QUEST · LA SCALATA</text>
+  <text x="540" y="348" text-anchor="middle" font-family="${F}" font-size="108" font-weight="900" fill="url(#gold)">RANK ${esc(r.grade)}</text>
+  <text x="540" y="428" text-anchor="middle" font-family="${F}" font-size="48" font-weight="800" fill="#eef1fb">${esc(r.name)} è HR Director!</text>
+  <text x="540" y="488" text-anchor="middle" font-family="${F}" font-size="36" font-weight="700" fill="#c7cfe8">in <tspan fill="#ffcf5c" font-weight="800">${esc(r.years)} anni</tspan> · <tspan fill="#ffcf5c" font-weight="800">${esc(r.scoreTxt)} pt</tspan>${r.rank?` · <tspan fill="#ffcf5c" font-weight="800">#${esc(r.rank)} al mondo</tspan>`:''}</text>
+  <line x1="160" y1="528" x2="920" y2="528" stroke="#2e3a63" stroke-width="2"/>
+  <text x="170" y="574" font-family="${F}" font-size="23" font-weight="800" fill="#6b789e" letter-spacing="4">IL PERCORSO DELLA SCALATA</text>
+  ${path}
+  <line x1="160" y1="928" x2="920" y2="928" stroke="#2e3a63" stroke-width="2"/>
+  <text x="270" y="966" text-anchor="middle" font-family="${F}" font-size="22" font-weight="700" fill="#6b789e" letter-spacing="2">COMPETENZA</text>
+  <text x="270" y="1002" text-anchor="middle" font-family="${F}" font-size="34" font-weight="800" fill="#eef1fb">${esc(r.comp)}/100</text>
+  <text x="540" y="966" text-anchor="middle" font-family="${F}" font-size="22" font-weight="700" fill="#6b789e" letter-spacing="2">REPUTAZIONE</text>
+  <text x="540" y="1002" text-anchor="middle" font-family="${F}" font-size="34" font-weight="800" fill="#eef1fb">${esc(r.rep)}</text>
+  <text x="810" y="966" text-anchor="middle" font-family="${F}" font-size="22" font-weight="700" fill="#6b789e" letter-spacing="2">RISPARMI</text>
+  <text x="810" y="1002" text-anchor="middle" font-family="${F}" font-size="34" font-weight="800" fill="#eef1fb">${Math.round(r.bank/1000)}k€</text>
+  <text x="540" y="1048" text-anchor="middle" font-family="${F}" font-size="30" font-weight="800" fill="#8f9dff">Prova a battermi → hrquest-g2v.vercel.app</text>
+  <text x="540" y="1074" text-anchor="middle" font-family="${F}" font-size="20" font-weight="600" fill="#6b789e">Powered by game2value</text>
 </svg>`;
 }
 function renderShareBlob(r){
@@ -1964,18 +1995,37 @@ function renderShareBlob(r){
 }
 async function shareResult(){
   const r=window._lastResult; if(!r) return;
-  try{
-    const blob=await renderShareBlob(r);
-    const file=new File([blob],'hr-quest-risultato.png',{type:'image/png'});
-    const text=`Sono diventato HR Director in ${r.years} anni su HR Quest (Rank ${r.grade})! Prova a battermi: https://hrquest-g2v.vercel.app`;
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], text, title:'HR Quest'});
-    } else {
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='hr-quest-risultato.png'; a.click();
-      try{ await navigator.clipboard.writeText(text); toast('Immagine scaricata e testo copiato 📋','good'); }
-      catch(e){ toast('Immagine scaricata!','good'); }
-    }
-  }catch(e){ if(e && e.name==='AbortError') return; toast('Condivisione non riuscita','bad'); }
+  let blob;
+  try{ blob=await renderShareBlob(r); }catch(e){ toast('Errore nel generare il badge','bad'); return; }
+  const prevUrl=URL.createObjectURL(blob);
+  const text=`Sono diventato HR Director in ${r.years} anni su HR Quest (Rank ${r.grade})! Prova a battermi: https://hrquest-g2v.vercel.app`;
+  const enc=encodeURIComponent(text);
+  const file=new File([blob],'hr-quest-badge.png',{type:'image/png'});
+  const canNative = !!(navigator.canShare && navigator.canShare({files:[file]}));
+  const copyBadge=async()=>{ try{ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]); return true; }catch(e){ return false; } };
+  const download=()=>{ const a=document.createElement('a'); a.href=prevUrl; a.download='hr-quest-badge.png'; a.click(); };
+  const m=$("modal");
+  m.innerHTML=`<h2 style="margin-top:2px">Condividi il tuo badge</h2>
+    <div class="tagline">fai vedere a tutti la tua scalata</div>
+    <img class="shprev" src="${prevUrl}" alt="Il tuo badge HR Quest">
+    <div class="shgrid">
+      <button class="shbtn li" id="shLi">LinkedIn</button>
+      <button class="shbtn wa" id="shWa">WhatsApp</button>
+      <button class="shbtn xx" id="shX">X (Twitter)</button>
+      <button class="shbtn dl" id="shDl">⬇ Scarica PNG</button>
+      ${canNative?'<button class="shbtn nat" id="shNat">📤 Altre app…</button>':''}
+    </div>
+    <div class="shnote">Su LinkedIn il badge viene <b>copiato</b>: incollalo nel post con Ctrl/Cmd+V.</div>
+    <button class="btn block ghost" id="shClose" style="margin-top:12px">Chiudi</button>`;
+  $("shLi").onclick=async()=>{ const ok=await copyBadge(); if(!ok) download();
+    window.open('https://www.linkedin.com/feed/?shareActive=true&text='+enc,'_blank','noopener');
+    toast(ok?'Badge copiato 📋 Incollalo nel post con Ctrl/Cmd+V':'Badge scaricato: allegalo al post','good'); };
+  $("shWa").onclick=()=>window.open('https://wa.me/?text='+enc,'_blank','noopener');
+  $("shX").onclick=()=>window.open('https://twitter.com/intent/tweet?text='+enc,'_blank','noopener');
+  $("shDl").onclick=()=>{ download(); toast('Badge scaricato!','good'); };
+  if(canNative) $("shNat").onclick=async()=>{ try{ await navigator.share({files:[file], text, title:'HR Quest'}); }catch(e){} };
+  $("shClose").onclick=hideOverlay;
+  showOverlay();
 }
 
 function winGame(){
@@ -2005,7 +2055,8 @@ function winGame(){
     <button class="btn block ghost" id="lbView" style="margin-bottom:10px">${icon('trophy',15)} Vedi la classifica</button>
     <button class="btn block ghost" id="againBtn">🔁 Gioca ancora</button>`;
   window._lastResult={ name:entry.name, years:years.toFixed(1).replace('.',','), grade,
-    scoreTxt:fmtScore(lbScore(entry)), rank:null, comp:compAvg, rep:entry.rep, bank:entry.bank };
+    scoreTxt:fmtScore(lbScore(entry)), rank:null, comp:compAvg, rep:entry.rep, bank:entry.bank,
+    career:(G.career && G.career.length ? G.career : [{y:Math.ceil(G.month/4), t:"HR Director", co:G.company.n}]).slice() };
   let hl={ts:entry.ts};
   card.querySelector("#shareBtn").onclick=shareResult;
   card.querySelector("#lbView").onclick=()=>showLeaderboard(hl);
