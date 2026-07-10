@@ -665,15 +665,15 @@ function toggleSfx(){
 // minQ = minimum quarters in this role before promoting (~2 years). companyTier gates max level.
 const LEVELS = [
   {t:"HR Assistant",        desc:"L'ingresso. Impari selezione e amministrazione di base.",
-   next:{sel:22, amm:20, org:18}, minQ:8},
+   next:{sel:22, amm:20, org:18}, minQ:4},
   {t:"HR Generalist",       desc:"Copri le HR a 360°: formazione, processi, relazioni.",
-   next:{for:34, org:34, rel:30}, minQ:11},
+   next:{for:34, org:34, rel:30}, minQ:4},
   {t:"HR Business Partner", desc:"Il riferimento HR del business: persone, decisioni, contenzioso.",
-   next:{sel:46, con:40, lea:44, rel:42}, minQ:12},
+   next:{sel:46, con:40, lea:44, rel:42}, minQ:6},
   {t:"HR Manager",          desc:"Guidi un team HR e i suoi progetti.",
-   next:{lea:60, rel:56, org:54, sin:48}, minQ:13},
+   next:{lea:60, rel:56, org:54, sin:48}, minQ:8},
   {t:"Senior HR Manager",   desc:"Gestisci relazioni complesse, sindacato e contenzioso.",
-   next:{lea:74, rel:68, sin:64, con:62, amm:58}, minQ:13},
+   next:{lea:74, rel:68, sin:64, con:62, amm:58}, minQ:8},
   {t:"HR Director",         desc:"Il vertice: la strategia HR dell'intera azienda.", next:null},
 ];
 
@@ -694,19 +694,59 @@ const COMPANIES = {
 
 // Activities — cost 1 or 2 PA. NOT repeatable within the same quarter.
 // Cheap actions = broad/light. Costly (2 PA) actions = deep, bigger payoff.
+// Ogni attività ha varianti per fascia di ruolo (v.jr = Assistant/Generalist,
+// v.mid = Business Partner/Manager, v.sr = Senior/Director): stessa meccanica,
+// tipologia e complessità che crescono con la carriera. I gate (req) restano
+// invariati e sempre ≤ ai requisiti di promozione: nessun rischio di blocco.
 const ACTIONS = [
-  {id:"colloqui",  ic:"selezione",      cat:"soft", ap:1, t:"Fai colloqui",           d:"Selezioni candidati per le posizioni aperte.",     eff:{sel:5, rep:1, stress:4}},
-  {id:"formazione",ic:"formazione",     cat:"soft", ap:2, t:"Piano di formazione",    d:"Progetti un percorso formativo strutturato per l'azienda.", eff:{for:9, lea:3, rep:2, stress:6}, req:{k:"org", v:12}},
-  {id:"organizza", ic:"organizzazione", cat:"soft", ap:2, t:"Riorganizza i processi", d:"Rimetti mano a flussi, ruoli e procedure HR.",     eff:{org:9, amm:3, stress:6}, req:{k:"amm", v:10}},
-  {id:"admin",     ic:"amministrazione",cat:"hard", ap:1, t:"Amministrazione",        d:"Contratti, buste paga, adempimenti.",              eff:{amm:5, org:1, stress:4}},
-  {id:"contenz",   ic:"contenzioso",    cat:"hard", ap:2, t:"Gestisci un contenzioso", d:"Vertenze, diffide, pratiche legali complesse.",   eff:{con:9, amm:3, rep:2, stress:10}, req:{k:"amm", v:12}},
-  {id:"sindacale", ic:"sindacale",      cat:"hard", ap:2, t:"Trattativa sindacale",   d:"Tavoli con le RSU e contrattazione collettiva.",   eff:{sin:9, con:3, rep:2, stress:10}, req:{k:"con", v:15}},
-  {id:"guida",     ic:"leadership",     cat:"man",  ap:2, t:"Guida il team",          d:"Deleghi, motivi e sviluppi le persone.",           eff:{lea:9, rel:3, rep:2, stress:7}, req:{k:"rel", v:12}},
-  {id:"capo",      ic:"relazionali",    cat:"man",  ap:1, t:"Curi il rapporto col capo", d:"Allinei aspettative e costruisci fiducia.",     eff:{rel:5, rep:2, stress:3}},
-  {id:"network",   ic:"network",        cat:"man",  ap:1, t:"Networking",             d:"Eventi e contatti: la tua reputazione cresce.",    eff:{rep:5, sin:1, stress:2}},
-  {id:"corso",     ic:"corso",          cat:"none", ap:1, t:"Corso di aggiornamento", d:"Ti formi: cresci a 360° e stacchi un po' la testa dal lavoro.", eff:{sel:2, for:2, con:2, stress:-2}, cost:600},
+  {id:"colloqui",  ic:"selezione",      cat:"soft", ap:1, t:"Fai colloqui", d:"Selezioni candidati.", eff:{sel:5, rep:1, stress:4}, v:{
+    jr:{t:"Screening e colloqui",       d:"Fai screening dei CV e primi colloqui ai candidati junior."},
+    mid:{t:"Selezioni profili chiave",  d:"Gestisci le selezioni per ruoli specialistici e manager."},
+    sr:{t:"Talent strategy",            d:"Definisci la strategia di recruiting e chiudi i profili executive."}}},
+  {id:"formazione",ic:"formazione",     cat:"soft", ap:2, t:"Formazione", d:"Formazione aziendale.", eff:{for:9, lea:3, rep:2, stress:6}, req:{k:"org", v:12}, v:{
+    jr:{t:"Tutor in aula",              d:"Affianchi come tutor un piano di formazione già avviato."},
+    mid:{t:"Progetti la formazione",    d:"Progetti un percorso formativo strutturato per l'azienda."},
+    sr:{t:"Crei l'academy",             d:"Disegni un'academy aziendale con percorsi e docenti interni.", eff:{for:10, lea:3, rep:2, stress:7}}}},
+  {id:"organizza", ic:"organizzazione", cat:"soft", ap:2, t:"Organizzazione", d:"Processi HR.", eff:{org:9, amm:3, stress:6}, req:{k:"amm", v:10}, v:{
+    jr:{t:"Metti ordine nei processi",  d:"Aggiorni procedure e flussi HR di base."},
+    mid:{t:"Riorganizzi i processi",    d:"Rimetti mano a flussi, ruoli e procedure HR."},
+    sr:{t:"Ridisegni l'organizzazione", d:"Guidi un ridisegno organizzativo: nuovi ruoli e responsabilità.", eff:{org:10, amm:3, stress:7}}}},
+  {id:"admin",     ic:"amministrazione",cat:"hard", ap:1, t:"Amministrazione", d:"Contratti e payroll.", eff:{amm:5, org:1, stress:4}, v:{
+    jr:{t:"Supporto al payroll",        d:"Prepari contratti e dati per buste paga e adempimenti."},
+    mid:{t:"Gestisci l'amministrazione",d:"Supervisioni contratti, payroll e compliance."},
+    sr:{t:"Governi il budget HR",       d:"Gestisci budget del personale, costi e politiche retributive."}}},
+  {id:"contenz",   ic:"contenzioso",    cat:"hard", ap:2, t:"Contenzioso", d:"Pratiche legali.", eff:{con:9, amm:3, rep:2, stress:10}, req:{k:"amm", v:12}, v:{
+    jr:{t:"Supporti una vertenza",      d:"Prepari documenti e istruttoria per una vertenza seguita dal legale."},
+    mid:{t:"Gestisci un contenzioso",   d:"Vertenze, diffide, pratiche legali complesse."},
+    sr:{t:"Strategia del contenzioso",  d:"Definisci la linea su cause delicate e accordi transattivi.", eff:{con:10, amm:3, rep:2, stress:11}}}},
+  {id:"sindacale", ic:"sindacale",      cat:"hard", ap:2, t:"Sindacale", d:"Relazioni sindacali.", eff:{sin:9, con:3, rep:2, stress:10}, req:{k:"con", v:15}, v:{
+    jr:{t:"Assisti ai tavoli sindacali",d:"Prepari dati e verbali per gli incontri con le RSU."},
+    mid:{t:"Trattativa sindacale",      d:"Tavoli con le RSU e contrattazione collettiva."},
+    sr:{t:"Relazioni industriali",      d:"Negozi accordi di secondo livello e piani di riorganizzazione.", eff:{sin:10, con:3, rep:2, stress:11}}}},
+  {id:"guida",     ic:"leadership",     cat:"man",  ap:2, t:"Leadership", d:"Guidi le persone.", eff:{lea:9, rel:3, rep:2, stress:7}, req:{k:"rel", v:12}, v:{
+    jr:{t:"Coordini un progetto",       d:"Coordini un piccolo progetto HR e impari a delegare."},
+    mid:{t:"Guida il team",             d:"Deleghi, motivi e sviluppi le persone."},
+    sr:{t:"Sviluppi i leader",          d:"Fai mentoring ai manager e costruisci la leadership pipeline.", eff:{lea:10, rel:3, rep:2, stress:8}}}},
+  {id:"capo",      ic:"relazionali",    cat:"man",  ap:1, t:"Relazioni", d:"Rapporti col vertice.", eff:{rel:5, rep:2, stress:3}, v:{
+    jr:{t:"Curi il rapporto col capo",  d:"Allinei aspettative e costruisci fiducia."},
+    mid:{t:"Gestisci gli stakeholder",  d:"Allinei manager e direzione sulle priorità HR."},
+    sr:{t:"Siedi al tavolo del board",  d:"Porti i temi HR in comitato direttivo e costruisci alleanze."}}},
+  {id:"network",   ic:"network",        cat:"man",  ap:1, t:"Networking", d:"Contatti e reputazione.", eff:{rep:5, sin:1, stress:2}, v:{
+    jr:{t:"Networking",                 d:"Eventi e contatti: la tua reputazione cresce."},
+    mid:{t:"Networking di settore",     d:"Community HR e tavole rotonde: ti fai conoscere."},
+    sr:{t:"Speaker e opinion leader",   d:"Intervieni a eventi e pubblichi: sei un punto di riferimento."}}},
+  {id:"corso",     ic:"corso",          cat:"none", ap:1, t:"Formazione personale", d:"Studi.", eff:{sel:2, for:2, con:2, stress:-2}, cost:600, v:{
+    jr:{t:"Corso di aggiornamento",     d:"Ti formi: cresci a 360° e stacchi un po' la testa dal lavoro."},
+    mid:{t:"Certificazione professionale", d:"Investi in una certificazione: cresci a 360°."},
+    sr:{t:"Executive program",          d:"Un programma executive: visione, metodo e network di alto livello."}}},
   {id:"riposo",    ic:"riposo",         cat:"none", ap:1, t:"Stacca la spina",        d:"Una vacanza: abbassi molto lo stress. Costa in base al tuo tenore di vita.", eff:{stress:-20, rep:-1}, cost:1600, costScales:true},
 ];
+// Fascia di seniority del ruolo corrente → variante attività.
+const bandOf = lvl => lvl>=4 ? 'sr' : lvl>=2 ? 'mid' : 'jr';
+function actView(a){
+  const v=(a.v && a.v[bandOf(G.level)]) || {};
+  return { t:v.t||a.t, d:v.d||a.d, eff:v.eff||a.eff };
+}
 
 // End-of-month challenges. Options gated by competences (req scales with level). Always one fallback.
 const CHALLENGES = [
@@ -944,16 +984,19 @@ function fxTags(eff){
   return out;
 }
 
+let _actBand=null;
 function buildActions(){
+  _actBand=bandOf(G.level);
   const list=$("actList"); list.innerHTML="";
   ACTIONS.forEach(a=>{
+    const vw=actView(a);
     const b=document.createElement("button"); b.className="act"; b.id="act-"+a.id;
     const dot = a.cat!=="none" ? `<span class="catdot" style="background:${CATS[a.cat].col}"></span>` : "";
     const icCol = a.cat!=="none" ? CATS[a.cat].col : "var(--dim)";
     const pips = "●".repeat(a.ap||1);
     const reqTag = a.req ? `<div class="reqtag" id="req-${a.id}"></div>` : "";
-    b.innerHTML=`${dot}<div class="ic" style="color:${icCol}">${icon(a.ic,24)}</div><div class="t">${a.t}</div>
-      <div class="d">${a.d}</div>${reqTag}<div class="fx"><span class="tag ap">${pips} ${a.ap||1} PA</span>${fxTags(a.eff)}${a.cost?`<span class="tag mon" id="cost-${a.id}"></span>`:""}</div>`;
+    b.innerHTML=`${dot}<div class="ic" style="color:${icCol}">${icon(a.ic,24)}</div><div class="t">${vw.t}</div>
+      <div class="d">${vw.d}</div>${reqTag}<div class="fx"><span class="tag ap">${pips} ${a.ap||1} PA</span>${fxTags(vw.eff)}${a.cost?`<span class="tag mon" id="cost-${a.id}"></span>`:""}</div>`;
     b.onclick=()=>doAction(a);
     list.appendChild(b);
   });
@@ -973,6 +1016,7 @@ function render(){
   STATS.forEach(st=>{ $("bar-"+st.k).style.width=clamp(s[st.k],0,100)+"%"; $("val-"+st.k).textContent=Math.round(s[st.k]); });
   const dots=$("apDots"); dots.innerHTML="";
   for(let i=0;i<3;i++){const d=document.createElement("div");d.className="dot"+(i<G.ap?" on":"");dots.appendChild(d);}
+  if(_actBand!==bandOf(G.level)) buildActions();   // promozione/cambio fascia → nuove varianti attività
   ACTIONS.forEach(a=>{
     const el=$("act-"+a.id);
     const cost=a.ap||1;
@@ -1065,7 +1109,7 @@ function doAction(a){
   if(cost>G.ap || G.usedActs.includes(a.id) || actionLocked(a)) return;
   const money=actionCost(a);
   if(money){ if(G.bank<money) return; G.bank-=money; }
-  applyEff(a.eff, stressMult());
+  applyEff(actView(a).eff, stressMult());
   G.usedActs.push(a.id); G.ap-=cost;
   sfx('action');
   if(G.stress>=100){ loseGame(); return; }
@@ -1572,9 +1616,9 @@ function winGame(){
   const years=G.month/4, compAvg=avg(G.stats);
   const entry={name:(G.name||"Tu").slice(0,24), years:+years.toFixed(2), comp:compAvg, rep:Math.round(G.rep), bank:Math.round(G.bank), ts:Date.now()};
   let grade="B", note="Traguardo pienamente meritato.";
-  if(years<=12){grade="S";note="Ascesa fulminante. Un talento generazionale delle HR.";}
-  else if(years<=15){grade="A";note="Percorso brillante e solido.";}
-  else if(years<=19){grade="B";note="Traguardo pienamente meritato.";}
+  if(years<=9){grade="S";note="Ascesa fulminante. Un talento generazionale delle HR.";}
+  else if(years<=12){grade="A";note="Percorso brillante e solido.";}
+  else if(years<=15){grade="B";note="Traguardo pienamente meritato.";}
   else {grade="C";note="Ci è voluto tempo, ma ce l'hai fatta.";}
   const card=$("endCard");
   card.innerHTML=`<div class="em" style="color:var(--gold)">${icon('trophy',60)}</div><div class="grade">RANK ${grade}</div>
