@@ -2010,13 +2010,26 @@ async function lbFetch(){
   return await r.json();
 }
 async function lbSubmit(entry){
-  const r=await fetch(`${SUPA.url}/rest/v1/leaderboard`,{
+  // Invio tramite la funzione validata sul server (submit_score): il client non scrive
+  // mai direttamente sulla tabella. Fallback all'insert diretto SOLO se la funzione non
+  // è ancora deployata (404), così durante la transizione non si rompe nulla.
+  let r=await fetch(`${SUPA.url}/rest/v1/rpc/submit_score`,{
     method:"POST",
-    headers:{ ...supaHeaders(), "Content-Type":"application/json", Prefer:"return=representation" },
-    body:JSON.stringify({ name:entry.name, years:entry.years, comp:entry.comp, rep:entry.rep, bank:entry.bank }),
+    headers:{ ...supaHeaders(), "Content-Type":"application/json" },
+    body:JSON.stringify({ p_name:entry.name, p_years:entry.years, p_comp:entry.comp, p_rep:entry.rep, p_bank:entry.bank }),
   });
+  if(r.status===404){
+    r=await fetch(`${SUPA.url}/rest/v1/leaderboard`,{
+      method:"POST",
+      headers:{ ...supaHeaders(), "Content-Type":"application/json", Prefer:"return=representation" },
+      body:JSON.stringify({ name:entry.name, years:entry.years, comp:entry.comp, rep:entry.rep, bank:entry.bank }),
+    });
+    if(!r.ok) throw new Error("write "+r.status);
+    return (await r.json())[0];
+  }
   if(!r.ok) throw new Error("write "+r.status+" "+(await r.text().catch(()=>'')));
-  return (await r.json())[0];
+  const j=await r.json();
+  return Array.isArray(j) ? j[0] : j;
 }
 
 // Built-in benchmark champions — always shown as targets, alongside real players.
